@@ -40,7 +40,7 @@ d.comb = list(Y=Y,S=df$S,K=df$K,U=df$U,
               alpharep=rep(alpha0,A),
               M1=M1sim)
 
-SimR1fitcomb1.trueM.year = stan(file="exec/agereader_comb_year_strat1_trueM.stan",data=d.comb,
+SimR1fitcomb1.trueM.year = stan(file="../stan/agereader_comb_year_strat1_trueM.stan",data=d.comb,
                     iter=100000,chains=4,thin=100)
 save(SimR1fitcomb1.trueM.year,file="SimR1fitcomb1.trueM.year100000.RData")
 

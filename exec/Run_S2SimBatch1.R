@@ -37,6 +37,6 @@ d.comb = list(Y=Y,S=df$S,K=df$K,U=df$U,
               taupar=c(0,10),
               deltapar=c(1,1))
 
-S2simfitcomb1.year = stan(file="exec/agereader_comb_year_strat1.stan",data=d.comb,
+S2simfitcomb1.year = stan(file="../stan/agereader_comb_year_strat1.stan",data=d.comb,
                     iter=100000,chains=4,thin=100)
 save(S2simfitcomb1.year,file="S2simfitcomb1.year100000.RData")

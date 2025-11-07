@@ -38,6 +38,6 @@ d.comb = list(Y=Y,S=df$S,K=df$K,U=df$U,
               deltapar=c(1,1),
               eps=0.001)
 
-fitcomb0.year = stan(file="exec/agereader_comb_year_strat0.stan",data=d.comb,
+fitcomb0.year = stan(file="../stan/agereader_comb_year_strat0.stan",data=d.comb,
                     iter=100000,chains=4,thin=100)
 save(fitcomb0.year,file="fitcomb0.year100000_v2.RData")
