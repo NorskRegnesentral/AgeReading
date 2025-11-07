@@ -24,7 +24,7 @@ d.comb = list(U=U,R=R1,Amin=Amin,Amax=Amax,A=Amax-Amin+1,Astar=Astar,
               true_age=rep(NA,U),
               eps=0.001)
 
-fitringuncrt0.year = stan(file="exec/agereader_year_strat0_uncrt.stan",data=d.comb,
+fitringuncrt0.year = stan(file="../stan/agereader_year_strat0_uncrt.stan",data=d.comb,
                     iter=5000,chains=4,thin=100)
 save(fitringuncrt0.year,file="fitring0.year50000.RData")
 

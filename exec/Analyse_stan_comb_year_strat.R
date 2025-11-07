@@ -40,7 +40,7 @@ d.comb = list(Y=Y,S=df$S,K=df$K,U=df$U,
 #              w=Herring.Stratum$w,INDSUM=Herring.Stratum$INDSUM)
 ##Make initial values
 
-fitcomb.year = stan(file="exec/agereader_comb_year_strat.stan",data=d.comb,
+fitcomb.year = stan(file="../stan/agereader_comb_year_strat.stan",data=d.comb,
                     iter=10000,chains=4,thin=250)
 save(fitcomb.year,file="fitcomb.year10000.RData")
 load("fitcomb0.year100000.RData")
@@ -57,7 +57,7 @@ d.comb2 = list(Y=Y,S=df$S,K=df$K,U=df$U,
               unitstationindex=df$unitstationindex,
               alpharep=rep(alpha0,A),
               deltapar=c(1,1))
-fitcombnoErr.year = stan(file="exec/agereader_comb_year_strat_noAgeerr.stan",data=d.comb2,
+fitcombnoErr.year = stan(file="../stan/agereader_comb_year_strat_noAgeerr.stan",data=d.comb2,
                      iter=50000,chains=4,thin=250)
 save(fitcombnoErr.year,file="fitcombnoErr.year50000.RData")
 load("fitcombnoErr.year50000.RData")

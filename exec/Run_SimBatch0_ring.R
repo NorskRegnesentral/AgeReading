@@ -28,7 +28,7 @@ d.comb = list(R=R1,Amin=Amin,Amax=Amax,A=Amax-Amin+1,Astar=Astar,
               deltapar=c(1,1),
               eps=0.001)
 
-simfitring0.year = stan(file="exec/agereader_year_strat0.stan",data=d.comb,
+simfitring0.year = stan(file="../stan/agereader_year_strat0.stan",data=d.comb,
                     iter=50000,chains=4,thin=100)
 save(simfitring0.year,file="simfitring0.year50000.RData")
 

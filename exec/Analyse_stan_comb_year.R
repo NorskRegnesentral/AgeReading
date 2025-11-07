@@ -30,7 +30,7 @@ d.comb = list(Y=Y,S=S,K=dim(Herring.Stratum$w)[2],R1=R1,R2=R2,Amin=Amin,Amax=Ama
 #              w=Herring.Stratum$w,INDSUM=Herring.Stratum$INDSUM)
 ##Make initial values
 
-fitcomb.year = stan(file="exec/agereader_comb_year.stan",data=d.comb,iter=10000,chains=2,thin=25)
+fitcomb.year = stan(file="../stan/agereader_comb_year.stan",data=d.comb,iter=10000,chains=2,thin=25)
 
 save(fitcomb.year,file="fitcomb.year10000.RData")
 load("fitcomb.year10000.RData")

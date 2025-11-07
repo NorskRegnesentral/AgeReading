@@ -39,7 +39,7 @@ d.comb0 = list(R=R1,Amin=Amin,Amax=Amax,A=Amax-Amin+1,Astar=Astar,
 runinit = 1
 if(runinit)
 {
-fitring0.year = stan(file="exec/agereader_year_strat0.stan",data=d.comb0,
+fitring0.year = stan(file="../stan/agereader_year_strat0.stan",data=d.comb0,
                         iter=50000,chains=4,thin=25)
 save(fitring0.year,file="fitring0.year50000.RData")
 }
@@ -76,7 +76,7 @@ d.comb = list(Y=Y,S=df$S,K=df$K,U=df$U,
               taupar=c(20,2,5,1,20),
               eps=0.001)
 
-fitcomb0.year = stan(file="exec/agereader_comb_year_strat0.stan",data=d.comb,
+fitcomb0.year = stan(file="../stan/agereader_comb_year_strat0.stan",data=d.comb,
                     iter=100000,chains=4,thin=100,init=init2)
 save(fitcomb0.year,file="fitcomb0.year100000.RData")
 

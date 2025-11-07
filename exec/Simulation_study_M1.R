@@ -97,7 +97,7 @@ for(m in 1:Nsim)
                  deltapar=c(1,1),
                  eps=0.001)
 
-  simfitring0.year = stan(file="exec/agereader_year_strat0.stan",data=d.comb0,
+  simfitring0.year = stan(file="../stan/agereader_year_strat0.stan",data=d.comb0,
                               iter=Nmcmc/2,chains=4,thin=25)
   save(simfitring0.year,file=paste0("Simfitring0M1.",m,".",Nmcmc/2,".RData"))
 
@@ -133,7 +133,7 @@ for(m in 1:Nsim)
                 deltapar=c(1,1),
                 eps=0.001)
 
-  simfitcomb0.year = stan(file="exec/agereader_comb_year_strat0.stan",data=d.comb,
+  simfitcomb0.year = stan(file="../stan/agereader_comb_year_strat0.stan",data=d.comb,
                             iter=Nmcmc,chains=4,thin=100,init=init2)
   save(simfitcomb0.year,file=paste0("simfitcomb0M1",m,".",Nmcmc,".RData"))
 }

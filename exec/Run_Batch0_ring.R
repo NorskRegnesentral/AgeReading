@@ -28,7 +28,7 @@ d.comb = list(R=R1,Amin=Amin,Amax=Amax,A=Amax-Amin+1,Astar=Astar,
               deltapar=c(1,1),
               eps=0.001)
 
-fitring0.year = stan(file="exec/agereader_year_strat0.stan",data=d.comb,
+fitring0.year = stan(file="../stan/agereader_year_strat0.stan",data=d.comb,
                     iter=5000,chains=4,thin=10)
 save(fitring0.year,file="fitring0.year50000.RData")
 
