@@ -11,7 +11,7 @@ data {
   int<lower=1,upper=K>  stationstrataindex[S];    //Index for year for a specific station
   int<lower=1,upper=S>  unitstationindex[U];
   vector<lower=0>[A] alpharep;
-  real deltapar[2];
+  real deltapar;
 }
 
 parameters { //Overall relative abundance
@@ -24,7 +24,7 @@ simplex[A] xi2[S];
 
 model {
   //Global parameters
-  target += uniform_lpdf(delta |0.0,20.0);
+  target += uniform_lpdf(delta |0.0,deltapar);
   for(y in 1:Y){
     target += dirichlet_lpdf(xi0[y]|alpharep);
   }
