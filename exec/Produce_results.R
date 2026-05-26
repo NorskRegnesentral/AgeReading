@@ -57,6 +57,9 @@ res2mean2 = Make_Numfish_sample(foo2,Herring_D_boot,HerringSurvey$stratayearinde
 
 
 ##Rename xi0 so ages become right
+## Commented out, already renamed
+if(0)
+{
 library(stringr)
 ind = grep("xi0",names(fitcomb0.year))
 foo = names(fitcomb0.year)[ind]
@@ -71,8 +74,12 @@ foo4 = substring(foo,first=7,last=8)
 foo4[1:15] = substring(foo4[1:15],first=1,last=1)
 for(i in 1:length(foo))
   foo2[[i]] = substitute(expression(x[i,j]^0),list(i=foo3[i],j=foo4[i]))
+}
 
 ##Rename M1 so ages become right
+## Commented out, already renamed
+if(0)
+{
 ind = grep("M1",names(fitcomb0.year))
 ind2 = matrix(nrow=length(ind),ncol=3)
 i=0
@@ -84,6 +91,7 @@ for(a in 1:A)
       ind2[i,] = c(r,a2+Amin-1,a+Amin-1)
     }
 names(fitcomb0.year)[ind] = paste0("M1[",ind2[,1],",",ind2[,2],",",ind2[,3],"]")
+}
 
 M1 = extract(fitcomb0.year,pars="M1")$M1
 M1mean = apply(M1,c(2,3,4),mean)
@@ -160,7 +168,7 @@ mcmc_intervals(xx,prob=0.8,prob_outer=0.95)+scale_y_discrete(labels=c(expression
 #plot(fitcomb0.year,pars=pars)
 dev.off()
 
-pdf("fit0_xi0_2021.pdf",height=7,width=4)
+pdf("fit0_xi0_2021.pdf",height=4,width=4)
 pars = paste0("xi0[1,",2+1:A,"]")
 xx =as.matrix(fitcomb0.year,pars=pars)
 mcmc_intervals(xx,prob=0.8,prob_outer=0.95)+scale_y_discrete(labels=3:12)+labs(y="Age",x="Proportion")+
@@ -169,7 +177,8 @@ mcmc_intervals(xx,prob=0.8,prob_outer=0.95)+scale_y_discrete(labels=3:12)+labs(y
 #plot(fitcomb0.year,pars=pars)+labs(y="Age",x="Proportion")
 dev.off()
 
-pdf("fit0_xi0_2022.pdf",height=7,width=4)
+pdf("fit0_xi0_2022.pdf",height=4,width=4)
+pars = paste0("xi0[2,",2+1:A,"]")
 xx =as.matrix(fitcomb0.year,pars=pars)
 mcmc_intervals(xx,prob=0.8,prob_outer=0.95)+scale_y_discrete(labels=3:12)+labs(y="Age",x="Proportion")+
   theme(axis.text.x = element_text(size = 14),axis.text.y = element_text(size = 14),
@@ -178,7 +187,7 @@ mcmc_intervals(xx,prob=0.8,prob_outer=0.95)+scale_y_discrete(labels=3:12)+labs(y
 plot(fitcomb0.year,pars=pars)
 dev.off()
 
-pdf("fit0_xi0_2023.pdf",height=7,width=4)
+pdf("fit0_xi0_2023.pdf",height=4,width=4)
 pars = paste0("xi0[3,",2+1:A,"]")
 xx =as.matrix(fitcomb0.year,pars=pars)
 mcmc_intervals(xx,prob=0.8,prob_outer=0.95)+scale_y_discrete(labels=3:12)+labs(y="Age",x="Proportion")+
@@ -187,7 +196,7 @@ mcmc_intervals(xx,prob=0.8,prob_outer=0.95)+scale_y_discrete(labels=3:12)+labs(y
 #plot(fitcomb0.year,pars=pars)
 dev.off()
 
-pdf("fit0_M1_11_11.pdf",height=7,width=4)
+pdf("fit0_M1_11_11.pdf",height=4.5,width=4)
 ind = 1:R
 pars = paste0("M1[",ind,",11,11]")
 xx =as.matrix(fitcomb0.year,pars=pars)
@@ -197,7 +206,7 @@ mcmc_intervals(xx,prob=0.8,prob_outer=0.95)+scale_y_discrete(labels=1:14)+labs(y
 #plot(fitcomb0.year,pars=pars)
 dev.off()
 
-pdf("fit0_M1_45.pdf",height=5,width=4)
+pdf("fit0_M1_45.pdf",height=4.5,width=4)
 ind = 1:R
 pars = paste0("M1[",ind,",4,5]")
 xx =as.matrix(fitcomb0.year,pars=pars)
@@ -207,7 +216,7 @@ mcmc_intervals(xx,prob=0.8,prob_outer=0.95)+scale_y_discrete(labels=1:14)+labs(y
 #plot(fitcomb0.year,pars=pars)
 dev.off()
 
-pdf("fit0_M1_76.pdf",height=5,width=4)
+pdf("fit0_M1_76.pdf",height=4.5,width=4)
 ind = 1:R
 pars = paste0("M1[",ind,",7,6]")
 xx =as.matrix(fitcomb0.year,pars=pars)
@@ -228,12 +237,13 @@ for(i in 1:Rp)
   DM[i,2,] = diag(M1L[i,,])
   DM[i,3,] = diag(M1U[i,,])
 }
-pdf("fit0_M1diag.pdf",height=7,width=6)
+pdf("fit0_M1diag.pdf",height=5,width=6)
 matplot(matrix(2+rep(1:A,Rp),nrow=A),t(DM[,1,]),
         type="l",lwd=1.75,lty=c(rep(2,6),rep(1,8)),ylim=c(0.5,1),
-        xlab="Age",ylab="Probability of correct age reading",cex.lab=1.5)
-legend("bottomleft",paste0("Reader ",1:Rp),lwd=1.75,lty=c(rep(2,6),rep(1,8)),col=1:14)
-
+        xlab="Age",ylab="Prob. correct age reading",cex.lab=1.5)
+#legend("bottomleft",paste0("Reader ",1:Rp),lwd=1.75,lty=c(rep(2,6),rep(1,8)),col=1:14)
+legend("bottomleft",paste0("Reader ",1:7),lwd=1.75,lty=c(rep(2,6),rep(1,1)),col=1:7)
+legend(5.51,0.754,paste0("Reader ",8:Rp),lwd=1.75,lty=c(rep(1,7)),col=8:14)
 dev.off()
 
 foo = extract(fitcomb0.year,pars="M1")$M1
@@ -358,7 +368,7 @@ for(y in 1:3)
   dev.off()
 }
 
-l = list()
+l2 = list()
 ind = 0
 for(y in 1:3)
 {
@@ -370,15 +380,15 @@ for(y in 1:3)
                          rep(2,dim(res1)[1]),rep(3,dim(res2)[1])))
     df$y = df$y/10^9
     df$cl = as.factor(df$cl)
-    l[[ind]] = ggplot(df,aes(x=y,color=cl,fill=cl)) +
+    l2[[ind]] = ggplot(df,aes(x=y,color=cl,fill=cl)) +
       geom_density(alpha=0.5,show.legend=FALSE) +
       ggtitle(paste0("Age=",a+Amin-1)) + xlab('') + ylab('')
   }
 }
 pdf(paste0("Nest_meanvar_allyear.pdf"),height=5,width=10)
-grid.arrange(l[[1]],l[[2]],l[[3]],
-             l[[4]],l[[5]],l[[6]],
-             l[[7]],l[[8]],l[[9]],ncol=3,nrow=3)
+grid.arrange(l2[[1]],l2[[2]],l2[[3]],
+             l2[[4]],l2[[5]],l2[[6]],
+             l2[[7]],l2[[8]],l2[[9]],ncol=3,nrow=3)
 dev.off()
 
 
@@ -425,6 +435,34 @@ pdf(paste0("Nest_nvarD_allyear.pdf"),height=5,width=10)
 grid.arrange(l[[1]],l[[2]],l[[3]],l[[4]],l[[5]],l[[6]],l[[7]],l[[8]],l[[9]],ncol=3,nrow=3)
 dev.off()
 
+l = list()
+ind = 0
+y = 2
+for(a in 3:5)
+{
+  ind = ind+1
+  df = data.frame(y=c(res0[,y,a],res1[,y,a],res2[,y,a]),
+                  cl=c(rep(1,dim(res0)[1]),
+                       rep(2,dim(res1)[1]),rep(3,dim(res2)[1])))
+  df$y = df$y/10^9
+  df$cl = as.factor(df$cl)
+  l[[ind]] = ggplot(df,aes(x=y,color=cl,fill=cl)) +
+    geom_density(alpha=0.5,show.legend=FALSE) +
+    ggtitle(paste0("Age=",a+Amin-1)) + xlab('') + ylab('')
+  
+  ind = ind+1
+  df = data.frame(y=c(res0[,y,a],res0mean[,y,a]),
+                  cl=c(rep(1,dim(res0)[1]),
+                       rep(2,dim(res0mean)[1])))
+  df$y = df$y/10^9
+  df$cl = as.factor(df$cl)
+  l[[ind]] = ggplot(df,aes(x=y,color=cl,fill=cl)) +
+    geom_density(alpha=0.5,show.legend=FALSE) +
+    ggtitle(paste0("Age=",a+Amin-1)) + xlab('') + ylab('')
+}
+pdf("Nest_sim_2022.pdf",height=5,width=10)
+grid.arrange(l[[1]],l[[3]],l[[5]],l[[2]],l[[4]],l[[6]],ncol=3,nrow=2)
+dev.off()
 
 for(y in 1:3)
 {

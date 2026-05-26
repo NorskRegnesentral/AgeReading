@@ -33,7 +33,7 @@ d.comb2 = list(Y=Y,S=df$S,K=df$K,U=df$U,
               stationstrataindex=df$stationstrataindex,
               unitstationindex=df$unitstationindex,
               alpharep=rep(alpha0,A),
-              deltapar=c(1,1))
+              deltapar=20)
 fitcomb2.year = stan(file="../stan/agereader_comb_year_strat2.stan",data=d.comb2,
                      iter=100000,chains=4,thin=100)
 save(fitcomb2.year,file="fitcomb2.year100000.RData")

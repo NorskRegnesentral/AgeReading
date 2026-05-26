@@ -35,7 +35,7 @@ d.comb = list(Y=Y,S=df$S,K=df$K,U=df$U,
               unitreaderindex=df$unitreaderindex,
               alpharep=rep(alpha0,A),
               taupar=c(3,3),
-              deltapar=c(1,1),
+              deltapar=20,
               eps=0.001)
 
 fitcomb0.year = stan(file="../stan/agereader_comb_year_strat0.stan",data=d.comb,

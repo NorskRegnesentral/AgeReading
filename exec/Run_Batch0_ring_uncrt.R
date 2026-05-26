@@ -20,7 +20,7 @@ d.comb = list(U=U,R=R1,Amin=Amin,Amax=Amax,A=Amax-Amin+1,Astar=Astar,
               D=Ring.full,
               alpharep=rep(alpha0,A),
               taupar=c(3,3),
-              deltapar=c(1,1),
+              deltapar=20,
               true_age=rep(NA,U),
               eps=0.001)
 

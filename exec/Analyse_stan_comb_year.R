@@ -26,7 +26,7 @@ d.comb = list(Y=Y,S=S,K=dim(Herring.Stratum$w)[2],R1=R1,R2=R2,Amin=Amin,Amax=Ama
               readErr=Ring.readErr,
               D=Herring.survey.year$d,N=Herring.survey.year$N,alpharep=rep(alpha0,A),
               taupar=c(10,10),
-              deltapar=c(2,15))
+              deltapar=20)
 #              w=Herring.Stratum$w,INDSUM=Herring.Stratum$INDSUM)
 ##Make initial values
 

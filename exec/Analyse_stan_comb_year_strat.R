@@ -36,7 +36,7 @@ d.comb = list(Y=Y,S=df$S,K=df$K,U=df$U,
               unitreaderindex=df$unitreaderindex,
               alpharep=rep(alpha0,A),
               taupar=c(10,10),
-              deltapar=c(1,1))
+              deltapar=20)
 #              w=Herring.Stratum$w,INDSUM=Herring.Stratum$INDSUM)
 ##Make initial values
 
@@ -56,7 +56,7 @@ d.comb2 = list(Y=Y,S=df$S,K=df$K,U=df$U,
               stationstrataindex=df$stationstrataindex,
               unitstationindex=df$unitstationindex,
               alpharep=rep(alpha0,A),
-              deltapar=c(1,1))
+              deltapar=20)
 fitcombnoErr.year = stan(file="../stan/agereader_comb_year_strat_noAgeerr.stan",data=d.comb2,
                      iter=50000,chains=4,thin=250)
 save(fitcombnoErr.year,file="fitcombnoErr.year50000.RData")

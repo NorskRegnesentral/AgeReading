@@ -94,7 +94,7 @@ for(m in 3:Nsim)
                  readErr=Sim.Ring.readErr,
                  alpharep=rep(alpha0,A),
                  taupar=c(20,2,5,1,20),
-                 deltapar=c(1,1),
+                 deltapar=20,
                  eps=0.001)
 
   simfitring1.year = stan(file="../stan/agereader_year_strat1.stan",data=d.comb0,
@@ -130,7 +130,7 @@ for(m in 3:Nsim)
                 unitreaderindex=df$unitreaderindex,
                 alpharep=rep(alpha0,A),
                 taupar=c(1,1,1,1,1),
-                deltapar=c(1,1),
+                deltapar=20,
                 eps=0.001)
 
   simfitcomb1.year = stan(file="../stan/agereader_comb_year_strat1.stan",data=d.comb,

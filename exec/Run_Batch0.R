@@ -33,7 +33,7 @@ d.comb0 = list(R=R1,Amin=Amin,Amax=Amax,A=Amax-Amin+1,Astar=Astar,
                readErr=dataRing,
                alpharep=rep(alpha0,A),
                taupar=sqrt(c(20,2,5,1,20)),
-               deltapar=c(1,1),
+               deltapar=20,
                eps=0.001)
 
 runinit = 1

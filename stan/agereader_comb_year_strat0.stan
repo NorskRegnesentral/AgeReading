@@ -17,7 +17,7 @@ data {
   int<lower=1,upper=S>  unitstationindex[U];
   int<lower=1,upper=R2> unitreaderindex[U];
   vector<lower=0>[A] alpharep;
-  real deltapar[2];
+  real deltapar;
   real taupar[5];
 }
 
@@ -86,7 +86,7 @@ model {
   target += normal_lpdf(Pbeta1|0,3);
   target += normal_lpdf(Ptrphi|0,3);
 
-  target += uniform_lpdf(delta |0.0,20.0);
+  target += uniform_lpdf(delta |0.0,deltapar);
   target += std_normal_lpdf(alpha0_std);
   target += std_normal_lpdf(beta0_std);
   target += std_normal_lpdf(alpha1_std);

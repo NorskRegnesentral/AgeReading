@@ -25,7 +25,7 @@ d.comb = list(R=R1,Amin=Amin,Amax=Amax,A=Amax-Amin+1,Astar=Astar,
               readErr=Ring.readErr,
               alpharep=rep(alpha0,A),
               taupar=c(0,10),
-              deltapar=c(1,1),
+              deltapar=20,
               eps=0.001)
 
 fitring0.year = stan(file="../stan/agereader_year_strat0.stan",data=d.comb,
