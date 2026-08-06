@@ -1,5 +1,5 @@
 ## Script for making Herring.surveydata
-## Counted within unit, where unit  falpha0is defined by the combinationof year, serialnumber and agereader
+## Counted within unit, where unit is defined by the combination of year, serialnumber and agereader
 ## d is an S times A matrix giving counts to different agegroups for each unit
 ## N is a vector of length S giving the total numbers for each unit
 ## strataindex is a vector of length S giving the strata
