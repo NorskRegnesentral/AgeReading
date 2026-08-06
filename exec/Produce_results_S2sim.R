@@ -1,4 +1,4 @@
-library(AgeHerring)
+library(AgeReading)
 library(rstan)
 library(ggplot2)
 require(gridExtra)
@@ -7,7 +7,7 @@ Amin=3;Amax=12
 A = Amax-Amin+1
 
 ##Comparing estimated xi^1 with truth
-load("fitcomb0.year100000.RData")              #reader dependent age errors
+load("../save_results/fitcomb0.year100000.RData")              #reader dependent age errors
 xi1 = apply(extract(fitcomb0.year,pars="xi1")$xi1,c(2,3),mean)
 
 yearstrat = list(y1=c(1:6),y2=c(7:11),y3=c(12:15))
@@ -29,11 +29,11 @@ for(y in 1:3)
 #Data: M_r: Model:M_r
 data(Herring_D_boot)
 data(HerringSurvey)
-load("S2simfitcomb0.year100000.RData")              #reader dependent age errors
+load("../save_results/S2simfitcomb0.year100000.RData")              #reader dependent age errors
 foo = rstan::extract(S2simfitcomb0.year)$xi1
 res0 = Make_Numfish_sample(foo,Herring_D_boot,HerringSurvey$stratayearindex)
 
-load("S2simfitcomb1.year100000.RData")              #reader dependent age errors
+load("../save_results/S2simfitcomb1.year100000.RData")              #reader dependent age errors
 foo = rstan::extract(S2simfitcomb1.year)$xi1
 res1 = Make_Numfish_sample(foo,Herring_D_boot,HerringSurvey$stratayearindex)
 
@@ -41,20 +41,20 @@ res1 = Make_Numfish_sample(foo,Herring_D_boot,HerringSurvey$stratayearindex)
 #foo = rstan::extract(S2sim2fitcomb1.year)$xi1
 #res2 = Make_Numfish_sample(foo,Herring_D_boot,HerringSurvey$stratayearindex)
 
-load("S2SimR1fitcomb1.year100000.RData")              #reader dependent age errors
+load("../save_results/S2SimR1fitcomb1.year100000.RData")              #reader dependent age errors
 foo = rstan::extract(S2SimR1fitcomb1.year)$xi1
 resR1 = Make_Numfish_sample(foo,Herring_D_boot,HerringSurvey$stratayearindex)
 
-load("S2SimR3fitcomb1.year100000.RData")              #reader dependent age errors
+load("../save_results/S2SimR3fitcomb1.year100000.RData")              #reader dependent age errors
 foo = rstan::extract(S2SimR3fitcomb1.year)$xi1
 resR3 = Make_Numfish_sample(foo,Herring_D_boot,HerringSurvey$stratayearindex)
 
-load("S2SimR6fitcomb1.year100000.RData")              #reader dependent age errors
+load("../save_results/S2SimR6fitcomb1.year100000.RData")              #reader dependent age errors
 foo = rstan::extract(S2SimR6fitcomb1.year)$xi1
 resR6 = Make_Numfish_sample(foo,Herring_D_boot,HerringSurvey$stratayearindex)
 
 
-pdf("S2Sim_fit0_xi1est.pdf",height=5,width=10)
+pdf("../save_results/S2Sim_fit0_xi1est.pdf",height=5,width=10)
 par(mfrow=c(5,3),mar=c(1,1,1,1),oma=c(4,5,0,0))
 xi1.est = extract(S2simfitcomb0.year,pars="xi1")$xi1
 for(k in 1:15)
@@ -71,6 +71,9 @@ dev.off()
 
 pdf("S2Sim_fit0_xi1est_2.pdf",height=5,width=10)
 l = list()
+tit = c("2021,6,3","2021,7,6","2021,8,3","2021,9,2","2021,10,3",
+        "2021,12,4","2022,5,1","2022,6,13","2022,7,7","2022,8,6",
+        "2022,9,2","2023,5,1","2023,6,10","2023,7,4","2023,8,3")
 for(k in 1:15)
 {
   q = apply(xi1.est[,k,],2,quantile,probs=c(0.25,0.5,0.975))
@@ -78,7 +81,8 @@ for(k in 1:15)
   l[[k]] = ggplot(df,aes(age,q2)) + geom_line(colour="red")+
     geom_ribbon(aes(ymin=q1,ymax=q3),fill="red",alpha=0.2) +
     theme(axis.title.x=element_blank(),axis.title.y=element_blank()) + ylim(0,0.85) +
-    geom_line(aes(y=xi1true),show.legend=FALSE)
+    geom_line(aes(y=xi1true),show.legend=FALSE)+
+    ggtitle(tit[k])
 }
 grid.arrange(l[[1]],l[[2]],l[[3]],l[[4]],l[[5]],l[[6]],
              l[[7]],l[[8]],l[[9]],l[[10]],l[[11]],l[[12]],
