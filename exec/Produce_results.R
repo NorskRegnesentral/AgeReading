@@ -1,4 +1,4 @@
-library(AgeHerring)
+library(AgeReading)
 library(rstan)
 library(ggplot2)
 require(gridExtra)
@@ -117,7 +117,8 @@ for(r in c(1,3,5,6))
 pdf("fit0_alpha0.pdf",height=6,width=5)
 pars="alpha0"
 xx =as.matrix(fitcomb0.year,pars=pars)
-mcmc_intervals(xx,prob=0.8,prob_outer=0.95)+scale_y_discrete(labels=3:12)+labs(y="Reader",x="Proportion")+
+mcmc_intervals(xx,prob=0.8,prob_outer=0.95)+scale_y_discrete(labels=paste0("alpha[0,",1:14,"]"))+
+  labs(y="",x="Proportion")+
   theme(axis.text.x = element_text(size = 14),axis.text.y = element_text(size = 14),
         axis.title.x=element_text(size=22),axis.title.y=element_text(size=22))
 #plot(fitcomb0.year,pars=pars)
@@ -126,7 +127,8 @@ dev.off()
 pdf("fit0_beta0.pdf",height=6,width=5)
 pars="beta0"
 xx =as.matrix(fitcomb0.year,pars=pars)
-mcmc_intervals(xx,prob=0.8,prob_outer=0.95)+scale_y_discrete(labels=3:12)+labs(y="Reader",x="Proportion")+
+mcmc_intervals(xx,prob=0.8,prob_outer=0.95)+scale_y_discrete(labels=paste0("beta[0,",1:14,"]"))+
+  labs(y="",x="Proportion")+
   theme(axis.text.x = element_text(size = 14),axis.text.y = element_text(size = 14),
         axis.title.x=element_text(size=22),axis.title.y=element_text(size=22))
 #plot(fitcomb0.year,pars=pars)
@@ -135,7 +137,8 @@ dev.off()
 pdf("fit0_alpha1.pdf",height=6,width=5)
 pars="alpha1"
 xx =as.matrix(fitcomb0.year,pars=pars)
-mcmc_intervals(xx,prob=0.8,prob_outer=0.95)+scale_y_discrete(labels=3:12)+labs(y="Reader",x="Proportion")+
+mcmc_intervals(xx,prob=0.8,prob_outer=0.95)+scale_y_discrete(labels=paste0("alpha[1,",1:14,"]"))+
+  labs(y="",x="Proportion")+
   theme(axis.text.x = element_text(size = 14),axis.text.y = element_text(size = 14),
         axis.title.x=element_text(size=22),axis.title.y=element_text(size=22))
 #plot(fitcomb0.year,pars=pars)
@@ -144,7 +147,8 @@ dev.off()
 pdf("fit0_beta1.pdf",height=6,width=5)
 pars="beta1"
 xx =as.matrix(fitcomb0.year,pars=pars)
-mcmc_intervals(xx,prob=0.8,prob_outer=0.95)+scale_y_discrete(labels=3:12)+labs(y="Reader",x="Proportion")+
+mcmc_intervals(xx,prob=0.8,prob_outer=0.95)+scale_y_discrete(labels=paste0("beta[1,",1:14,"]"))+
+  labs(y="",x="Proportion")+
   theme(axis.text.x = element_text(size = 14),axis.text.y = element_text(size = 14),
         axis.title.x=element_text(size=22),axis.title.y=element_text(size=22))
 #plot(fitcomb0.year,pars=pars)
@@ -153,7 +157,8 @@ dev.off()
 pdf("fit0_trphi.pdf",height=6,width=5)
 pars="trphi"
 xx =as.matrix(fitcomb0.year,pars=pars)
-mcmc_intervals(xx,prob=0.8,prob_outer=0.95)+scale_y_discrete(labels=3:12)+labs(y="Reader",x="Proportion")+
+mcmc_intervals(xx,prob=0.8,prob_outer=0.95)+scale_y_discrete(labels=paste("trphi[",1:14,"]"))+
+  labs(y="",x="Proportion")+
   theme(axis.text.x = element_text(size = 14),axis.text.y = element_text(size = 14),
         axis.title.x=element_text(size=22),axis.title.y=element_text(size=22))
 #plot(fitcomb0.year,pars=pars)
@@ -196,7 +201,18 @@ mcmc_intervals(xx,prob=0.8,prob_outer=0.95)+scale_y_discrete(labels=3:12)+labs(y
 #plot(fitcomb0.year,pars=pars)
 dev.off()
 
-pdf("fit0_M1_11_11.pdf",height=4.5,width=4)
+pdf("fit0_M1_7_7.pdf",height=4.5,width=4.7)
+ind = 1:R
+pars = paste0("M1[",ind,",7,7]")
+xx =as.matrix(fitcomb0.year,pars=pars)
+mcmc_intervals(xx,prob=0.8,prob_outer=0.95)+scale_y_discrete(labels=1:14)+labs(y="Reader",x="Proportion")+
+  theme(axis.text.x = element_text(size = 14),axis.text.y = element_text(size = 14),
+        axis.title.x=element_text(size=22),axis.title.y=element_text(size=22))
+#plot(fitcomb0.year,pars=pars)
+dev.off()
+
+
+pdf("fit0_M1_11_11.pdf",height=4.5,width=4.7)
 ind = 1:R
 pars = paste0("M1[",ind,",11,11]")
 xx =as.matrix(fitcomb0.year,pars=pars)
@@ -206,21 +222,23 @@ mcmc_intervals(xx,prob=0.8,prob_outer=0.95)+scale_y_discrete(labels=1:14)+labs(y
 #plot(fitcomb0.year,pars=pars)
 dev.off()
 
-pdf("fit0_M1_45.pdf",height=4.5,width=4)
+pdf("fit0_M1_45.pdf",height=4.5,width=4.7)
 ind = 1:R
 pars = paste0("M1[",ind,",4,5]")
 xx =as.matrix(fitcomb0.year,pars=pars)
 mcmc_intervals(xx,prob=0.8,prob_outer=0.95)+scale_y_discrete(labels=1:14)+labs(y="Reader",x="Proportion")+
+  scale_x_continuous(limits=c(0,0.1),breaks=0.1*c(0,0.25,0.5,0.75))+
   theme(axis.text.x = element_text(size = 14),axis.text.y = element_text(size = 14),
         axis.title.x=element_text(size=22),axis.title.y=element_text(size=22))
 #plot(fitcomb0.year,pars=pars)
 dev.off()
 
-pdf("fit0_M1_76.pdf",height=4.5,width=4)
+pdf("fit0_M1_76.pdf",height=4.5,width=4.7)
 ind = 1:R
 pars = paste0("M1[",ind,",7,6]")
 xx =as.matrix(fitcomb0.year,pars=pars)
 mcmc_intervals(xx,prob=0.8,prob_outer=0.95)+scale_y_discrete(labels=1:14)+labs(y="Reader",x="Proportion")+
+  scale_x_continuous(limits=c(0,0.1),breaks=0.1*c(0,0.25,0.5,0.75))+
   theme(axis.text.x = element_text(size = 14),axis.text.y = element_text(size = 14),
         axis.title.x=element_text(size=22),axis.title.y=element_text(size=22))
 #plot(fitcomb0.year,pars=pars)
@@ -301,6 +319,68 @@ for(y in 1:3)
                l[[9]],l[[10]],ncol=5,nrow=2)
   dev.off()
 }
+library(dplyr)
+
+
+for(y in 1:3)
+{
+  age = NULL
+  val = NULL
+  met = NULL
+  M = dim(res0)[1]
+  M2 = dim(res0mean)[1]
+  #M = 500
+  for(a in 1:A)
+  {
+    age = c(age,rep(2+a,M))
+    val = c(val,res0[1:M,y,a])
+    met = c(met,rep(0,M))
+    age = c(age,rep(2+a,M))
+    val = c(val,res1[1:M,y,a])
+    met = c(met,rep(1,M))
+    age = c(age,rep(2+a,M))
+    val = c(val,res2[1:M,y,a])
+    met = c(met,rep(2,M))
+    age = c(age,rep(2+a,M2))
+    val = c(val,res0mean[1:M2,y,a])
+    met = c(met,rep(3,M2))
+  }
+  df = data.frame(age=factor(age),value=val,method=as.factor(met))
+  summary_df <- df %>%
+    group_by(age, method) %>%
+    summarise(
+      ymin   = min(value),
+      lower  = quantile(value, 0.25),
+      middle = median(value),
+      upper  = quantile(value, 0.75),
+      ymax   = max(value),
+      .groups = "drop"
+    )
+  pdf(paste0("Nest_boxplot_",2020+y,".pdf"),height=6,width=10)
+  ggplot(summary_df,
+         aes(x = age, fill = method)) +
+    geom_boxplot(
+      aes(
+        ymin = ymin,
+        lower = lower,
+        middle = middle,
+        upper = upper,
+        ymax = ymax
+      ),
+      stat = "identity",
+      position = position_dodge(width = 0.8)
+    ) +
+    theme_minimal()
+  
+  #ggplot(ddf, aes(x = factor(age), y = value, fill = model)) +
+  #  geom_boxplot(position = position_dodge(width = 0.8)) +
+  #  labs(x = "Age", y = "Value") +
+  #  scale_fill_manual(
+  #    values = c("0" = "red","1" = "green","2" = "blue","3" = "cyan")) +
+  #  theme_minimal()
+  dev.off()
+}
+
 
 #Only using mean of bootstrap samples
 for(y in 1:3)
@@ -435,6 +515,81 @@ pdf(paste0("Nest_nvarD_allyear.pdf"),height=5,width=10)
 grid.arrange(l[[1]],l[[2]],l[[3]],l[[4]],l[[5]],l[[6]],l[[7]],l[[8]],l[[9]],ncol=3,nrow=3)
 dev.off()
 
+diff00 = matrix(nrow=3,ncol=A)
+M =10000
+for(y in 1:3)
+  for(a in 1:A)
+  {
+    x1 = sample(res0[,y,a],M,replace=T)
+    y1 = sample(res0[,y,a],M,replace=T)
+    print(c(y,a))
+    diff00[y,a] = mean(x1>y1)
+  }
+
+diff01 = matrix(nrow=3,ncol=A)
+M =10000
+for(y in 1:3)
+  for(a in 1:A)
+  {
+    x1 = sample(res0[,y,a],M,replace=T)
+    y1 = sample(res1[,y,a],M,replace=T)
+    print(c(y,a))
+    diff01[y,a] = mean(x1>y1)
+  }
+
+diff02 = matrix(nrow=3,ncol=A)
+M =10000
+for(y in 1:3)
+  for(a in 1:A)
+  {
+    x1 = sample(res0[,y,a],M,replace=T)
+    y1 = sample(res2[,y,a],M,replace=T)
+    print(c(y,a))
+    diff02[y,a] = mean(x1>y1)
+  }
+
+matplot(cbind(diff01[1,],diff02[1,]),type="l")
+
+w1 = function(x,y)
+{
+  x1 = (x-mean(x))/sd(x)
+  y1 = (y-mean(x))/sd(x)
+  wasserstein1d(x1,y1)
+}
+
+wasser00 = matrix(nrow=3,ncol=A)
+M = dim(res0)[1]
+for(y in 1:3)
+  for(a in 1:A)
+  {
+    print(c(y,a))
+    wasser00[y,a] = w1(res0[,y,a],sample(res0[,y,a],M,replace=TRUE))
+  }
+
+wasser01 = matrix(nrow=3,ncol=A)
+for(y in 1:3)
+  for(a in 1:A)
+  {
+    print(c(y,a))
+    wasser01[y,a] = w1(res0[,y,a],res1[,y,a])
+  }
+
+wasser02 = matrix(nrow=3,ncol=A)
+for(y in 1:3)
+  for(a in 1:A)
+  {
+    print(c(y,a))
+    wasser02[y,a] = w1(res0[,y,a],res2[,y,a])
+  }
+
+
+mean0 = round(apply(res0[,2,],2,mean)/10^9,2)
+sd0 = round(apply(res0[,2,],2,sd)/10^9,2)
+mean1 = round(apply(res1[,2,],2,mean)/10^9,2)
+sd1 = round(apply(res1[,2,],2,sd)/10^9,2)
+mean2 = round(apply(res2[,2,],2,mean)/10^9,2)
+sd2 = round(apply(res2[,2,],2,sd)/10^9,2)
+
 l = list()
 ind = 0
 y = 2
@@ -442,13 +597,31 @@ for(a in 3:5)
 {
   ind = ind+1
   df = data.frame(y=c(res0[,y,a],res1[,y,a],res2[,y,a]),
-                  cl=c(rep(1,dim(res0)[1]),
+                  Method=c(rep(1,dim(res0)[1]),
                        rep(2,dim(res1)[1]),rep(3,dim(res2)[1])))
   df$y = df$y/10^9
-  df$cl = as.factor(df$cl)
-  l[[ind]] = ggplot(df,aes(x=y,color=cl,fill=cl)) +
-    geom_density(alpha=0.5,show.legend=FALSE) +
-    ggtitle(paste0("Age=",a+Amin-1)) + xlab('') + ylab('')
+  df$Method = as.factor(df$Method)
+  l[[ind]] = ggplot(df,aes(x=y,color=Method,fill=Method)) +
+    geom_density(alpha=0.5) +
+    ggtitle(paste0("Age=",a+Amin-1)) + xlab('') + ylab('') +
+    scale_color_discrete(
+      labels = c(
+        paste0(mean0[a],"(",sd0[a],")"),
+        paste0(mean1[a],"(",sd1[a],")"),
+        paste0(mean2[a],"(",sd2[a],")"))) +
+    scale_fill_discrete(
+      labels = c(
+        paste0(mean0[a],"(",sd0[a],")"),
+        paste0(mean1[a],"(",sd1[a],")"),
+        paste0(mean2[a],"(",sd2[a],")"))) +
+    guides(
+      color = guide_legend(title = NULL),
+      fill  = guide_legend(title = NULL)
+    ) 
+    theme(legend.position = c(1,1),legend.justification = c(1, 1),
+          legend.text=element_text(size=6),
+          legend.key.size = unit(0.4, "lines"),
+          legend.title = element_blank())
   
   ind = ind+1
   df = data.frame(y=c(res0[,y,a],res0mean[,y,a]),
