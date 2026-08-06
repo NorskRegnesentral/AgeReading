@@ -1,6 +1,6 @@
 #Script for analyzing age-readings from annual Herring spawning survey in February/March
 #Only use data from 2022
-library(AgeHerring)
+library(AgeReading)
 library(rstan)
 #library(bridgesampling)
 logit = function(p){log(p/(1-p))}
