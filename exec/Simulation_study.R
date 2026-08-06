@@ -2,7 +2,7 @@
 
 ## First extract parameters from real data runs
 
-library(AgeHerring)
+library(AgeReading)
 library(rstan)
 library(ggplot2)
 require(gridExtra)
@@ -42,7 +42,7 @@ d.comb = list(Y=Y,S=df$S,K=df$K,U=df$U,
 
 set.seed(25423)
 
-load("fitcomb0.year100000.RData")              #reader dependent age errors
+load("../save_results/fitcomb0.year100000.RData")              #reader dependent age errors
 xi1 = apply(extract(fitcomb0.year,pars="xi1")$xi1,c(2,3),mean)
 xi2 = apply(extract(fitcomb0.year,pars="xi2")$xi2,c(2,3),mean)
 delta = apply(extract(fitcomb0.year,pars="delta")$delta,c(2),mean)

@@ -2,7 +2,7 @@
 
 ## First extract parameters from real data runs
 
-library(AgeHerring)
+library(AgeReading)
 library(rstan)
 library(ggplot2)
 require(gridExtra)
@@ -29,7 +29,7 @@ S=dim(df$d)[1]
 
 set.seed(456)
 
-load("fitcomb0.year100000.RData")              #reader dependent age errors
+load("../save_results/fitcomb0.year100000.RData")              #reader dependent age errors
 xi1 = apply(rstan::extract(fitcomb0.year,pars="xi1")$xi1,c(2,3),mean)
 xi2 = apply(rstan::extract(fitcomb0.year,pars="xi2")$xi2,c(2,3),mean)
 delta = apply(rstan::extract(fitcomb0.year,pars="delta")$delta,c(2),mean)
@@ -99,7 +99,7 @@ for(m in 1:Nsim)
 
   simfitring0.year = stan(file="../stan/agereader_year_strat0.stan",data=d.comb0,
                               iter=Nmcmc/2,chains=4,thin=25)
-  save(simfitring0.year,file=paste0("Simfitring0M1.",m,".",Nmcmc/2,".RData"))
+  save(simfitring0.year,file=paste0("../save_results/Simfitring0M1.",m,".",Nmcmc/2,".RData"))
 
   simext = rstan::extract(simfitring0.year)
   M = length(simext$Palpha0)
@@ -135,7 +135,7 @@ for(m in 1:Nsim)
 
   simfitcomb0.year = stan(file="../stan/agereader_comb_year_strat0.stan",data=d.comb,
                             iter=Nmcmc,chains=4,thin=100,init=init2)
-  save(simfitcomb0.year,file=paste0("simfitcomb0M1",m,".",Nmcmc,".RData"))
+  save(simfitcomb0.year,file=paste0("../save_results/simfitcomb0M1",m,".",Nmcmc,".RData"))
 }
 
 #Summarize results
@@ -147,7 +147,7 @@ crpsM1 = array(NA,c(Y,A,Nsim))
 for(m in 1:Nsim)
 {
   print(m)
-  load(paste0("simfitcomb0M1",m,".",Nmcmc,".RData"))              #reader dependent age errors
+  load(paste0("../save_results/simfitcomb0M1",m,".",Nmcmc,".RData"))              #reader dependent age errors
   foo = rstan::extract(simfitcomb0.year)$xi1
   res0 = Make_Numfish_sample(foo,Herring_D_boot,HerringSurvey$stratayearindex)
   fM1[m,,,] = apply(res0,c(2,3),quantile,probs=c(0.025,0.5,0.975))

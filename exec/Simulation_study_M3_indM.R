@@ -2,7 +2,7 @@
 
 ## First extract parameters from real data runs
 
-library(AgeHerring)
+library(AgeReading)
 library(rstan)
 library(ggplot2)
 require(gridExtra)
