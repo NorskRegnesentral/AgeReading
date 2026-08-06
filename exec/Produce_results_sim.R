@@ -1,4 +1,4 @@
-library(AgeHerring)
+library(AgeReading)
 library(rstan)
 library(ggplot2)
 require(gridExtra)
@@ -7,8 +7,8 @@ Amin=3;Amax=12
 A = Amax-Amin+1
 
 ##Comparing estimated xi^1 with truth
-load("fitcomb0.year100000.RData")              #reader dependent age errors
-xi1 = apply(extract(fitcomb0.year,pars="xi1")$xi1,c(2,3),mean)
+load("../save_results/fitcomb0.year100000.RData")              #reader dependent age errors
+xi1 = apply(rstan::extract(fitcomb0.year,pars="xi1")$xi1,c(2,3),mean)
 
 yearstrat = list(y1=c(1:6),y2=c(7:11),y3=c(12:15))
 ##CRSP:
@@ -29,24 +29,24 @@ for(y in 1:3)
 #Data: M_r: Model:M_r
 data(Herring_D_boot)
 data(HerringSurvey)
-load("simfitcomb0.year100000.RData")              #reader dependent age errors
+load("../save_results/simfitcomb0.year100000.RData")              #reader dependent age errors
 foo = rstan::extract(simfitcomb0.year)$xi1
 res0 = Make_Numfish_sample(foo,Herring_D_boot,HerringSurvey$stratayearindex)
 
-load("simfitcomb1.year100000.RData")              #reader dependent age errors
+load("../save_results/simfitcomb1.year100000.RData")              #reader dependent age errors
 foo = rstan::extract(simfitcomb1.year)$xi1
 res1 = Make_Numfish_sample(foo,Herring_D_boot,HerringSurvey$stratayearindex)
 
-load("sim2fitcomb0.year100000.RData")              #reader dependent age errors
-load("sim2fitcomb1.year100000.RData")              #reader dependent age errors
+#load("../save_results/sim2fitcomb0.year100000.RData")              #reader dependent age errors
+load("../save_results/sim2fitcomb1.year100000.RData")              #reader dependent age errors
 foo = rstan::extract(sim2fitcomb1.year)$xi1
 res2 = Make_Numfish_sample(foo,Herring_D_boot,HerringSurvey$stratayearindex)
 
-load("Sim3fitcomb1.year100000.RData")              #reader dependent age errors
+load("../save_results/Sim3fitcomb1.year100000.RData")              #reader dependent age errors
 foo = rstan::extract(Sim3fitcomb1.year)$xi1
 res3 = Make_Numfish_sample(foo,Herring_D_boot,HerringSurvey$stratayearindex)
 
-load("Sim6fitcomb1.year100000.RData")              #reader dependent age errors
+load("../save_results/Sim6fitcomb1.year100000.RData")              #reader dependent age errors
 foo = rstan::extract(Sim6fitcomb1.year)$xi1
 res6 = Make_Numfish_sample(foo,Herring_D_boot,HerringSurvey$stratayearindex)
 
@@ -70,10 +70,12 @@ l = list()
 tit = c("2021,6,3","2021,7,6","2021,8,3","2021,9,2","2021,10,3",
         "2021,12,4","2022,5,1","2022,6,13","2022,7,7","2022,8,6",
         "2022,9,2","2023,5,1","2023,6,10","2023,7,4","2023,8,3")
+metr = rep(NA,15)
 for(k in 1:15)
 {
   q = apply(xi1.est[,k,],2,quantile,probs=c(0.25,0.5,0.975))
   df = data.frame(age=2+1:A,q1=q[1,],q2=q[2,],q3=q[3,],xi1true=xi1[k,])
+  metr[k] = mean(xi1[k,]>=q[1,] & xi1[k]<=q[3,])
   l[[k]] = ggplot(df,aes(age,q2)) + geom_line(colour="red")+
     geom_ribbon(aes(ymin=q1,ymax=q3),fill="red",alpha=0.2) +
     theme(axis.title.x=element_blank(),axis.title.y=element_blank()) + ylim(0,0.85) +
@@ -151,14 +153,57 @@ for(y in 1:3)
   df$cl = as.factor(df$cl)
   df$col = as.factor(df$col)
   df$lty = as.factor(df$lty)
-  l[[y]] = ggplot(df,aes(x=age,y=N,group=cl,color=col)) + geom_line(aes(lty=lty),size=1.25,show.legend=FALSE) +
-    scale_x_continuous(breaks = seq(3, 11, by = 2))
+  l[[y]] = ggplot(df,aes(x=age,y=N,group=cl,color=col)) + geom_line(aes(lty=lty),size=1.25,show.legend=TRUE) +
+    scale_x_continuous(breaks = seq(3, 11, by = 2)) +
+    scale_color_manual(values = c(
+      "1" = "red","2" = "green","3" = "black"))
     crpsN0[y,] = crps(Ntrue[y,],t(res0[,y,]))$crps
 }
 
 pdf("Nest_comb_0_0_sim_true.pdf",height=5,width=7)
-grid.arrange(l[[1]],l[[2]],l[[3]],ncol=1,nrow=3)
+grid.arrange(l[[1]],l[[2]],l[[3]],nrow=1,ncol=3)
 dev.off()
+
+f = apply(res0,c(2,3),quantile,probs=c(0.025,0.5,0.975))
+f2 = apply(res2,c(2,3),quantile,probs=c(0.025,0.5,0.975))
+l = list()
+crpsN0 = matrix(nrow=3,ncol=A)
+tit = c("Numbers (billions)","","")
+metr = matrix(nrow=3,ncol=2)
+for(y in 1:3)
+{
+  df = data.frame(age=c(2+1:A),
+                  N11=f[1,y,]/10^9,N12=f[2,y,]/10^9,N13=f[3,y,]/10^9,
+                  N21=f2[1,y,]/10^9,N22=f2[2,y,]/10^9,N23=f2[3,y,]/10^9,Ntrue=Ntrue[y,]/10^9)
+  metr[y,1] = sum(Ntrue[y,]>=f[1,y,] & Ntrue[y,]<=f[3,y,])
+  metr[y,2] = sum(Ntrue[y,]>=f2[1,y,] & Ntrue[y,]<=f2[3,y,])
+  l[[y]] = ggplot(df, aes(age, N12)) +
+    geom_line(color = "red") +
+    geom_ribbon(aes(ymin = N21, ymax = N23), fill = "green", alpha = 0.3) +
+    geom_ribbon(aes(ymin = N11, ymax = N13), fill = "red", alpha = 0.3) +
+    scale_x_continuous(breaks = c(3,5,7,9,11)) + ylim(0,13) +
+    geom_line(aes(y = N22), color = "green") +
+    geom_line(aes(y = Ntrue), color = "black", show.legend = FALSE) +
+    ggtitle(paste0(2020+y)) +
+    theme(axis.text.x=element_text(size=14),
+          axis.title.x=element_text(size=14),
+          axis.text.y=element_text(size=14),
+          axis.title.y=element_text(size=14))+
+    labs(x="age",y=tit[y])
+}
+
+pdf("Nest_comb_0_0_sim_true.pdf",height=4,width=12)
+grid.arrange(l[[1]],l[[2]],l[[3]],nrow=1,ncol=3)
+dev.off()
+
+
+l[[k]] = ggplot(df,aes(age,q2)) + geom_line(colour="red")+
+  geom_ribbon(aes(ymin=q1,ymax=q3),fill="red",alpha=0.2) +
+  theme(axis.title.x=element_blank(),axis.title.y=element_blank()) + ylim(0,0.85) +
+  scale_x_continuous(breaks=c(3,5,7,9,11)) +
+  geom_line(aes(y=xi1true),show.legend=FALSE)+
+  ggtitle(tit[k])
+
 
 ##Compare against extreme readers
 f3 = apply(res3,c(2,3),quantile,probs=c(0.025,0.5,0.975))

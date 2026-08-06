@@ -1,6 +1,6 @@
 #Script for analyzing age-readings from annual Herring spawning survey in February/March
 #Only use data from 2022
-library(AgeHerring)
+library(AgeReading)
 library(rstan)
 library(TruncatedNormal)
 logit = function(p){log(p/(1-p))}
@@ -26,7 +26,7 @@ R=R1+R2
 Y=length(unique(df$stratayearindex))
 S=dim(df$d)[1]
 #Seed
-set.seed(2342)
+set.seed(23423)
 
 
 ## Initial values by running only on ring data
@@ -37,15 +37,15 @@ d.comb0 = list(R=R1,Amin=Amin,Amax=Amax,A=Amax-Amin+1,Astar=Astar,
                deltapar=20,
                eps=0.001)
 
-runinit = 1
+runinit = 0
 if(runinit)
 {
-simfitring0.year = stan(file="../stan/agereader_year_strat0.stan",data=d.comb0,
+simfitring0.year = stan(file="stan/agereader_year_strat0.stan",data=d.comb0,
                         iter=50000,chains=4,thin=25)
-save(simfitring0.year,file="simfitring0.year50000.RData")
+save(simfitring0.year,file="../save_results/simfitring0.year50000.RData")
 }
 if(!runinit)
- load("simfitring0.year50000.RData")
+ load("../save_results/simfitring0.year50000.RData")
 
 simext = rstan::extract(simfitring0.year)
 M = length(simext$Palpha0)
@@ -55,7 +55,8 @@ init1 = function(id)
   list(
     Palpha0=simext$Palpha0[ind],Palpha1=simext$Palpha1[ind],Pbeta0=simext$Pbeta0[ind],Pbeta1=simext$Pbeta1[ind],
        Ptrphi=simext$Ptrphi[ind],delta=simext$delta[ind,],
-       tau=simext$tau[ind,],
+       #tau=simext$tau[ind,],
+       tau=rep(0.5,5),
        alpha0=c(simext$alpha0[ind,],rnorm(R2,simext$Palpha0[ind],sqrt(simext$tau[ind,1]))),
        beta0=c(simext$beta0[ind,],rnorm(R2,simext$Pbeta0[ind],sqrt(simext$tau[ind,2]))),
        alpha1=c(simext$alpha1[ind,],rnorm(R2,simext$Palpha1[ind],sqrt(simext$tau[ind,3]))),
@@ -79,7 +80,7 @@ d.comb = list(Y=Y,S=df$S,K=df$K,U=df$U,
               deltapar=20,
               eps=0.001)
 
-simfitcomb0.year = stan(file="../stan/agereader_comb_year_strat0.stan",data=d.comb,
+simfitcomb0.year = stan(file="stan/agereader_comb_year_strat0.stan",data=d.comb,
                     iter=100000,chains=4,thin=100,init=init2)
-save(simfitcomb0.year,file="simfitcomb0.year100000.RData")
+save(simfitcomb0.year,file="../save_results/simfitcomb0.year100000.RData")
 
