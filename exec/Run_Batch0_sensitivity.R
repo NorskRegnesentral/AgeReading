@@ -33,7 +33,7 @@ d.comb0 = list(R=R1,Amin=Amin,Amax=Amax,A=Amax-Amin+1,Astar=Astar,
                readErr=dataRing,
                alpharep=rep(alpha0,A),
                taupar=sqrt(2*c(20,2,5,1,20)),
-               deltapar=2*20)
+               deltapar=2*50)
 
 runinit = 1
 if(runinit)
@@ -73,7 +73,7 @@ d.comb = list(Y=Y,S=df$S,K=df$K,U=df$U,
               unitreaderindex=df$unitreaderindex,
               alpharep=rep(alpha0,A),
               taupar=2*c(20,2,5,1,20),
-              deltapar=2*20)
+              deltapar=2*50)
 
 fitcomb0.year.sens = stan(file="stan/agereader_comb_year_strat0.stan",data=d.comb,
                     iter=100000,chains=4,thin=100,init=init2)

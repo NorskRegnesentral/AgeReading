@@ -33,18 +33,18 @@ d.comb0 = list(R=R1,Amin=Amin,Amax=Amax,A=Amax-Amin+1,Astar=Astar,
                readErr=dataRing,
                alpharep=rep(alpha0,A),
                taupar=sqrt(c(20,2,5,1,20)),
-               deltapar=20,
+               deltapar=50,
                eps=0.001)
 
-runinit = 1
+runinit = 0
 if(runinit)
 {
 fitring0.year = stan(file="stan/agereader_year_strat0.stan",data=d.comb0,
                         iter=50000,chains=4,thin=25)
-save(fitring0.year,file="fitring0.year50000.RData")
+save(fitring0.year,file="../save_results/fitring0.year50000.RData")
 }
 if(!runinit)
- load("fitring0.year50000.RData")
+ load("../save_results/fitring0.year50000.RData")
 
 simext = rstan::extract(fitring0.year)
 M = length(simext$Palpha0)
@@ -73,11 +73,11 @@ d.comb = list(Y=Y,S=df$S,K=df$K,U=df$U,
               unitstationindex=df$unitstationindex,
               unitreaderindex=df$unitreaderindex,
               alpharep=rep(alpha0,A),
-              taupar=c(20,2,5,1,20),
-              eps=0.001)
+              taupar=c(50,2,5,1,20),
+              deltapar=50)
 
 fitcomb0.year = stan(file="stan/agereader_comb_year_strat0.stan",data=d.comb,
-                    iter=100000,chains=4,thin=100,init=init2)
-save(fitcomb0.year,file="fitcomb0.year100000.RData")
+                    iter=500000,chains=4,thin=100,init=init2)
+save(fitcomb0.year,file="../save_results/fitcomb0.year500000.RData")
 
 
