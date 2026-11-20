@@ -1,5 +1,6 @@
 R package for AgeReading
-Reference: Storvik, Engebretsen, Aldrin, Fuglebakk: Effect of reader and age reading error on stock assessment: the case of scale readings of Norwegian Spring-Spawning Herring (Clupea harengus)
+Reference: Storvik, Engebretsen, Aldrin, Fuglebakk: Integrating Age-Reading Exercise Data and single-read Survey Data to improve estimates of numbers-at-age
+
 Folders
   data: Data files
   Mdata: Make R-objects of data used for the routines in exec
@@ -16,6 +17,10 @@ Sensitivity analysis:
   Run_Batch0_sensitivity.R: Run full model on real data, changed hyperparameters
   Run_Batch0_sensitivity.R: Produce plots
   
+Real data with subsets of exercise data
+  Run_Batch0_subring*.R
+  Run_Batch0_subread*.R
+  
 Simplified simulation study:
   Run_Sim_Batch0.R: Produce results for figures 5 and 6.
   
@@ -29,8 +34,7 @@ Simulation study 2, also simulating xi0/xi1:
   Simulation2_study_M1_indM. Simulation and fitting using one M 
   
 Figures:
-  Produce_results_S2_sim.R:
-    - Sim_fit0_xi1est_2.pdf:
+  Produce_results*.Rmd:
   
 Files in exec:
   Run_Batch[0/1/2].R: Main analysis on real data, for the three models
