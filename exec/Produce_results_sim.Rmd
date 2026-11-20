@@ -1,0 +1,504 @@
+---
+title: "Produce_results_sim"
+output: pdf_document
+date: "2026-10-27"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Producing results and plots from simulated data
+
+### Libraries
+
+```{r, echo=FALSE}
+library(AgeReading)
+library(rstan)
+library(ggplot2)
+require(gridExtra)
+library(verification)
+```
+
+### Loading result files and compute numbers at age
+
+```{r}
+Amin=3;Amax=12
+A = Amax-Amin+1
+data(Herring_D_boot)
+data(HerringSurvey)
+
+##Comparing estimated xi^1 with truth
+load("../../save_results/fitcomb0.year500000.RData")              #reader dependent age errors
+xi1 = apply(rstan::extract(fitcomb0.year,pars="xi1")$xi1,c(2,3),mean)
+load("../../save_results/res0fit0.RData")
+#load("../save_results/res1fit1.RData")
+
+load("../../save_results/simfitcomb0.year100000.RData")              #reader dependent age errors
+foo = rstan::extract(simfitcomb0.year)$xi1
+res1 = Make_Numfish_sample(foo,Herring_D_boot,HerringSurvey$stratayearindex)
+
+load("../../save_results/sim2fitcomb1.year100000.RData")              #reader dependent age errors
+foo = rstan::extract(sim2fitcomb1.year)$xi1
+res2 = Make_Numfish_sample(foo,Herring_D_boot,HerringSurvey$stratayearindex)
+
+
+```
+
+
+```{r}
+Amin=3;Amax=12
+A = Amax-Amin+1
+data(Herring_D_boot)
+data(HerringSurvey)
+
+##Comparing estimated xi^1 with truth
+load("../../save_results/fitcomb0.year500000.RData")              #reader dependent age errors
+xi1 = apply(rstan::extract(fitcomb0.year,pars="xi1")$xi1,c(2,3),mean)
+load("../../save_results/res0fit0.RData")
+#load("../save_results/res1fit1.RData")
+
+load("../../save_results/simfitcomb1.year100000.RData")              #reader dependent age errors
+foo = rstan::extract(simfitcomb1.year)$xi1
+res1 = Make_Numfish_sample(foo,Herring_D_boot,HerringSurvey$stratayearindex)
+
+load("../../save_results/sim2fitcomb1.year100000.RData")              #reader dependent age errors
+foo = rstan::extract(sim2fitcomb1.year)$xi1
+res2 = Make_Numfish_sample(foo,Herring_D_boot,HerringSurvey$stratayearindex)
+
+load("../../save_results/Sim3fitcomb1.year100000.RData")              #reader dependent age errors
+foo = rstan::extract(Sim3fitcomb1.year)$xi1
+res3 = Make_Numfish_sample(foo,Herring_D_boot,HerringSurvey$stratayearindex)
+
+load("../../save_results/Sim6fitcomb1.year100000.RData")              #reader dependent age errors
+foo = rstan::extract(Sim6fitcomb1.year)$xi1
+res6 = Make_Numfish_sample(foo,Herring_D_boot,HerringSurvey$stratayearindex)
+```
+
+
+### Computing true numbers at age
+
+```{r}
+yearstrat = list(y1=c(1:6),y2=c(7:11),y3=c(12:15))
+##CRSP:
+data(Herring_D_boot)
+K=15
+crpsxi = array(NA,c(K,A,4))
+Dmean = aggregate(Herring_D_boot$Abundance,list(Herring_D_boot$unitstrat),FUN=mean)$x
+Ntrue = array(NA,c(3,A))
+for(y in 1:3)
+{
+  Dy = Herring_D_boot[Herring_D_boot$Year==(2020+y),]
+  Dmean = aggregate(Dy$Abundance,list(Dy$unitstrat),FUN=mean)$x
+  for(a in 1:A)
+   Ntrue[y,a] = sum(Dmean*xi1[yearstrat[[y]],a])
+}
+
+```
+
+### Plot xi1est
+
+```{r}
+for(k in 1:15) {
+  q = apply(xi1.est[, k, ], 2, quantile, probs = c(0.025, 0.5, 0.975))
+
+  df = data.frame(
+    age = 2 + 1:A,
+    q1 = q[1, ],
+    q2 = q[2, ],
+    q3 = q[3, ],
+    xi1true = xi1[k, ]
+  )
+
+  metr[k] = mean(xi1[k, ] >= q[1, ] & xi1[k, ] <= q[3, ])
+
+  l[[k]] = ggplot(df, aes(age, q2)) +
+    geom_ribbon(
+      aes(ymin = q1, ymax = q3),
+      fill = "red",
+      alpha = 0.2,
+      show.legend = FALSE
+    ) +
+    geom_line(aes(colour = "Estimate")) +
+    geom_line(aes(y = xi1true, colour = "True")) +
+    scale_colour_manual(
+      name = NULL,
+      values = c(
+        "Estimate" = "red",
+        "True" = "black"
+      )
+    ) +
+    coord_cartesian(ylim = c(0, 0.85)) +
+    scale_x_continuous(breaks = c(3, 5, 7, 9, 11)) +
+    theme(
+      axis.title.x = element_blank(),
+      axis.title.y = element_blank(),
+
+      # Show it only on the first panel:
+      legend.position = if (k == 1) "inside" else "none",
+      legend.position.inside = c(0.98, 0.98),
+      legend.justification = c(1, 1),
+      # Make the legend compact:
+      legend.text = element_text(size = 7),
+      legend.key.height = grid::unit(0.3, "cm"),
+      legend.key.width = grid::unit(0.7, "cm"),
+      legend.spacing.y = grid::unit(0.05, "cm"),
+      legend.background = element_rect(
+        fill = "white",
+        colour = "black",
+        linewidth = 0.2
+      ),
+      legend.margin = margin(2, 2, 2, 2)
+    ) +
+    guides(
+      colour = guide_legend(
+        override.aes = list(linewidth = 0.6)
+      )
+    ) +
+    ggtitle(tit[k])
+}
+legend.position = if (k == 1) "inside" else "none"
+pdf("Sim_fit0_xi1est_2.pdf",height=5,width=10)
+grid.arrange(l[[1]],l[[2]],l[[3]],l[[4]],l[[5]],l[[6]],
+             l[[7]],l[[8]],l[[9]],l[[10]],l[[11]],l[[12]],
+             l[[13]],l[[14]],l[[15]],ncol=5,nrow=3)
+dev.off()
+```
+
+### Comparing estimated against "true" N(y,a)
+
+```{r}
+for(y in 1:3) {
+
+  df = data.frame(age = 2 + 1:A,N11 = f[1, y, ] / 10^9,N12 = f[2, y, ] / 10^9,N13 = f[3, y, ] / 10^9,
+    N21 = f2[1, y, ] / 10^9,N22 = f2[2, y, ] / 10^9,N23 = f2[3, y, ] / 10^9,Ntrue = Ntrue[y, ] / 10^9)
+
+  metr[y, 1] = sum(Ntrue[y, ] >= f[1, y, ] & Ntrue[y, ] <= f[3, y, ])
+  metr[y, 2] = sum(Ntrue[y, ] >= f2[1, y, ] & Ntrue[y, ] <= f2[3, y, ])
+
+  l[[y]] = ggplot(df, aes(age, N12)) +
+
+    # Intervals: no legend entries
+    geom_ribbon(aes(ymin = N21, ymax = N23),fill = "green", alpha = 0.3, show.legend = FALSE) +
+    geom_ribbon(aes(ymin = N11, ymax = N13),fill = "red", alpha = 0.3, show.legend = FALSE) +
+
+    # Lines included in the legend
+    geom_line(aes(colour = "reader-dependent")) +
+    geom_line(aes(y = N22, colour = "reader-independent")) +
+
+    # True line: omitted from legend
+    geom_line(aes(y = Ntrue), colour = "black", show.legend = FALSE) +
+
+    scale_colour_manual(
+      name = NULL,
+      values = c("reader-dependent" = "red","reader-independent" = "green")) +
+
+    scale_x_continuous(breaks = c(3, 5, 7, 9, 11)) +
+    coord_cartesian(ylim = c(0, 13)) +
+    ggtitle(paste0(2020 + y)) +
+    labs(x = "age", y = tit[y]) +
+
+    theme(
+      axis.text.x = element_text(size = 14),
+      axis.title.x = element_text(size = 14),
+      axis.text.y = element_text(size = 14),
+      axis.title.y = element_text(size = 14),
+
+      # Legend on first panel only
+      legend.position = if (y == 1) "inside" else "none",
+      legend.position.inside = c(0.98, 0.98),
+      legend.justification = c(1, 1),
+
+      # Smaller legend
+      legend.text = element_text(size = 11),
+      legend.key.height = grid::unit(0.55, "cm"),
+      legend.key.width = grid::unit(1.1, "cm"),
+      legend.spacing.y = grid::unit(0.12, "cm"),
+      legend.background = element_rect(
+        fill = "white",
+        colour = "black",
+        linewidth = 0.3
+      ),
+      legend.margin = margin(4, 4, 4, 4)
+    )
+}
+pdf("Nest_comb_0_0_sim_true.pdf",height=4,width=12)
+grid.arrange(l[[1]],l[[2]],l[[3]],nrow=1,ncol=3)
+dev.off()
+```
+
+
+### Compute crps
+
+```{r}
+#Data: M_r: Model:M
+pdf("Sim_fit1_xi1est.pdf",height=5,width=10)
+par(mfrow=c(5,3),mar=c(1,1,1,1),oma=c(4,5,0,0))
+xi1.est = extract(simfitcomb1.year,pars="xi1")$xi1
+for(k in 1:15)
+{
+  q = apply(xi1.est[,k,],2,quantile,probs=c(0.025,0.5,0.975))
+  matplot(2+cbind(1:A,1:A,1:A),t(q),type="l",lty=c(2,1,2),col=2,xlab="",ylab="",lwd=1.5,ylim=c(0,0.85))
+  lines(2+1:A,xi1[k,])
+  crpsxi[k,,2] = crps(xi1[k,],t(xi1.est[,1,]))$crps
+}
+mtext("Age (years)",side=1,line=1.5,outer=TRUE,cex=1.3)
+mtext(expression(xi[k]^1),side=2,line=2,outer=TRUE,cex=1.3,las=0)
+dev.off()
+
+#Data: M, Model: M_r
+pdf("Sim2_fit0_xi1est.pdf",height=5,width=10)
+par(mfrow=c(5,3),mar=c(1,1,1,1),oma=c(4,5,0,0))
+xi1.est = extract(sim2fitcomb0.year,pars="xi1")$xi1
+for(k in 1:15)
+{
+  q = apply(xi1.est[,k,],2,quantile,probs=c(0.025,0.5,0.975))
+  matplot(2+cbind(1:A,1:A,1:A),t(q),type="l",lty=c(2,1,2),col=2,xlab="",ylab="",lwd=1.5,ylim=c(0,0.85))
+  lines(2+1:A,xi1[k,])
+  crpsxi[k,,3] = crps(xi1[k,],t(xi1.est[,1,]))$crps
+}
+mtext("Age (years)",side=1,line=1.5,outer=TRUE,cex=1.3)
+mtext(expression(xi[k]^1),side=2,line=2,outer=TRUE,cex=1.3,las=0)
+dev.off()
+
+#Data: M, Model: M
+pdf("Sim2_fit1_xi1est.pdf",height=5,width=10)
+par(mfrow=c(5,3),mar=c(1,1,1,1),oma=c(4,5,0,0))
+xi1.est = extract(sim2fitcomb1.year,pars="xi1")$xi1
+for(k in 1:15)
+{
+  q = apply(xi1.est[,k,],2,quantile,probs=c(0.025,0.5,0.975))
+  matplot(2+cbind(1:A,1:A,1:A),t(q),type="l",lty=c(2,1,2),col=2,xlab="",ylab="",lwd=1.5,ylim=c(0,0.85))
+  lines(2+1:A,xi1[k,])
+  crpsxi[k,,4] = crps(xi1[k,],t(xi1.est[,1,]))$crps
+}
+mtext("Age (years)",side=1,line=1.5,outer=TRUE,cex=1.3)
+mtext(expression(xi[k]^1),side=2,line=2,outer=TRUE,cex=1.3,las=0)
+dev.off()
+
+```
+
+
+
+
+```{r}
+
+
+
+
+
+
+
+
+l[[k]] = ggplot(df,aes(age,q2)) + geom_line(colour="red")+
+  geom_ribbon(aes(ymin=q1,ymax=q3),fill="red",alpha=0.2) +
+  theme(axis.title.x=element_blank(),axis.title.y=element_blank()) + ylim(0,0.85) +
+  scale_x_continuous(breaks=c(3,5,7,9,11)) +
+  geom_line(aes(y=xi1true),show.legend=FALSE)+
+  ggtitle(tit[k])
+
+
+##Compare against extreme readers
+f3 = apply(res3,c(2,3),quantile,probs=c(0.025,0.5,0.975))
+f6 = apply(res6,c(2,3),quantile,probs=c(0.025,0.5,0.975))
+l = list()
+crpsN0 = matrix(nrow=3,ncol=A)
+for(y in 1:3)
+{
+  #matplot(cbind(1:A,1:A,1:A,1:A),cbind(t(f[,y,]),Ntrue[y,]),type="l",lty=c(2,1,2,1),lwd=2,col=c(1,1,1,2))
+  df = data.frame(age=c(1:A,1:A,1:A,1:A,1:A,1:A,1:A,1:A,1:A,1:A),
+                  N=c(f[1,y,],f[2,y,],f[3,y,],f3[1,y,],f3[2,y,],f3[3,y,],f6[1,y,],f6[2,y,],f6[3,y,],Ntrue[y,]),
+                  cl=c(rep(1,A),rep(2,A),rep(3,A),rep(4,A),rep(5,A),rep(6,A),rep(7,A),rep(8,A),rep(9,A),rep(10,A)),
+                  col=c(rep(1,3*A),rep(2,3*A),rep(3,3*A),rep(4,A)),
+                  lty=c(rep(2,A),rep(1,A),rep(2,A),rep(2,A),rep(1,A),rep(2,A),rep(2,A),rep(1,A),rep(2,A),rep(1,A)))
+  df$N = df$N/10^9
+  df$cl = as.factor(df$cl)
+  df$col = as.factor(df$col)
+  df$lty = as.factor(df$lty)
+  l[[y]] = ggplot(df,aes(x=age,y=N,group=cl,color=col)) + geom_line(aes(lty=lty),show.legend=TRUE)
+  crpsN0[y,] = crps(Ntrue[y,],t(res0[,y,]))$crps
+
+}
+pdf("Nest_extrm_0_0_sim_true.pdf",height=5,width=7)
+grid.arrange(l[[1]],l[[2]],l[[3]],ncol=1,nrow=3)
+dev.off()
+
+##Similar with densites for largest agegroup
+l = list()
+ind=0
+for(y in 1:3)
+{
+  for(a in (1+y):(3+y))
+  {
+    df = data.frame(y=c(res0[,y,a],res3[,y,a],res6[,y,a])/10^9,
+                    cl=c(rep(1,dim(res0)[1]),rep(2,dim(res3)[1]),rep(3,dim(res6)[1])))
+    df = data.frame(y=c(res3[,y,a],res6[,y,a])/10^9,
+                    cl=c(rep(1,dim(res3)[1]),rep(2,dim(res6)[1])))
+    df$cl = as.factor(df$cl)
+    ind = ind+1
+    l[[ind]] = ggplot(df,aes(x=y,color=cl,fill=cl)) +
+      geom_density(alpha=0.5,show.legend=TRUE) +
+      ggtitle(paste0("Year=",2020+y,",Age=",a+Amin-1)) + xlab('') + ylab('') +
+      geom_vline(xintercept=Ntrue[y,a]/10^9)
+  }
+}
+pdf("NestlargeA_extrm_0_0_sim_true.pdf",height=5,width=7)
+grid.arrange(l[[1]],l[[2]],l[[3]],l[[4]],l[[5]],l[[6]],l[[7]],l[[8]],l[[9]],ncol=3,nrow=3)
+dev.off()
+
+##Heatmat av M matriser
+
+z_values <- round(t(M1[1, , ]), 3)
+df <- expand.grid(x = 2 + 1:A, y = 2 + 1:A)
+df$Prob <- c(t(z_values))
+pdf("Heatmap_M1.pdf",height=5,width=5)
+ggplot(df, aes(x = x, y = y, fill = Prob)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "black") +
+  theme_minimal() +
+  labs(title = "", x = "True age", y = "Read age", fill = "Prob") +
+  scale_x_continuous(breaks = seq(min(df$x), max(df$x), by = 2)) +
+  scale_y_continuous(breaks = seq(min(df$y), max(df$y), by = 2)) +
+  theme(axis.text=element_text(size=20),axis.title=element_text(size=20))
+dev.off()
+
+
+
+z_values <- round(t(M1[3, , ]), 3)
+df <- expand.grid(x = 2 + 1:A, y = 2 + 1:A)
+df$Prob <- c(t(z_values))
+pdf("Heatmap_M3.pdf",height=5,width=5)
+ggplot(df, aes(x = x, y = y, fill = Prob)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "black") +
+  theme_minimal() +
+  labs(title = "", x = "True age", y = "Read age", fill = "Prob") +
+  scale_x_continuous(breaks = seq(min(df$x), max(df$x), by = 2)) +
+  scale_y_continuous(breaks = seq(min(df$y), max(df$y), by = 2))+
+  theme(axis.text=element_text(size=20),axis.title=element_text(size=20))
+dev.off()
+
+z_values <- round(t(M1[6, , ]), 3)
+df <- expand.grid(x = 2 + 1:A, y = 2 + 1:A)
+df$Prob <- c(t(z_values))
+pdf("Heatmap_M6.pdf",height=5,width=5)
+ggplot(df, aes(x = x, y = y, fill = Prob)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "black") +
+  theme_minimal() +
+  labs(title = "", x = "True age", y = "Read age", fill = "Prob") +
+  scale_x_continuous(breaks = seq(min(df$x), max(df$x), by = 2)) +
+  scale_y_continuous(breaks = seq(min(df$y), max(df$y), by = 2))+
+  theme(axis.text=element_text(size=20),axis.title=element_text(size=20))
+dev.off()
+
+Mbar = apply(M1,2:3,mean)
+z_values <- round(t(Mbar), 3)
+df <- expand.grid(x = 2 + 1:A, y = 2 + 1:A)
+df$Prob <- c(t(z_values))
+pdf("Heatmap_Mbar.pdf",height=5,width=5)
+ggplot(df, aes(x = x, y = y, fill = Prob)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "black") +
+  theme_minimal() +
+  labs(title = "", x = "True age", y = "Read age", fill = "Prob") +
+  scale_x_continuous(breaks = seq(min(df$x), max(df$x), by = 2)) +
+  scale_y_continuous(breaks = seq(min(df$y), max(df$y), by = 2))+
+  theme(axis.text=element_text(size=20),axis.title=element_text(size=20))
+dev.off()
+
+
+crpsN1 = matrix(nrow=3,ncol=A)
+f = apply(res2,c(2,3),quantile,probs=c(0.025,0.5,0.975))
+l = list()
+for(y in 1:3)
+{
+  #matplot(cbind(1:A,1:A,1:A,1:A),cbind(t(f[,y,]),Ntrue[y,]),type="l",lty=c(2,1,2,1),lwd=2,col=c(1,1,1,2))
+  df = data.frame(age=c(1:A,1:A,1:A,1:A),N=c(f[1,y,],f[2,y,],f[3,y,],Ntrue[y,]),
+                  cl=c(rep(1,A),rep(2,A),rep(3,A),rep(4,A)),
+                  col=c(rep(1,3*A),rep(2,A)),lty=c(rep(2,A),rep(1,A),rep(2,A),rep(1,A)))
+  df$N = df$N/10^9
+  df$cl = as.factor(df$cl)
+  df$col = as.factor(df$col)
+  df$lty = as.factor(df$lty)
+  l[[y]] = ggplot(df,aes(x=age,y=N,group=cl,color=col)) + geom_line(aes(lty=lty),show.legend=FALSE)
+  crpsN1[y,] = crps(Ntrue[y,],t(res2[,y,]))$crps
+}
+pdf("Nest_1_1_sim_true.pdf",height=5,width=5)
+grid.arrange(l[[1]],l[[2]],l[[3]],ncol=1,nrow=3)
+dev.off()
+
+
+## Compare two extrems
+l = list()
+ind = 0
+for(y in 1:3)
+{
+  for(a in (1+y):(3+y))
+  {
+    ind = ind + 1
+    df = data.frame(y=c(res3[,y,a],res6[,y,a]),
+                    cl=c(rep(1,dim(res0)[1]),
+                         rep(2,dim(res1)[1])))
+    df$y = df$y/10^9
+    df$cl = as.factor(df$cl)
+    l[[ind]] = ggplot(df,aes(x=y,color=cl,fill=cl)) +
+      geom_density(alpha=0.5,show.legend=FALSE) +
+      ggtitle(paste0("Age=",a+Amin-1)) + xlab('') + ylab('')
+  }
+}
+pdf(paste0("NestSim_compare_extrems.pdf"),height=5,width=10)
+grid.arrange(l[[1]],l[[2]],l[[3]],
+             l[[4]],l[[5]],l[[6]],
+             l[[7]],l[[8]],l[[9]],ncol=3,nrow=3)
+dev.off()
+
+##Compare reader dependent data/model with reader independent data/model
+
+l = list()
+y=1
+for(a in 1:A)
+{
+  df = data.frame(y=c(res0[,y,a],res1[,y,a],res2[,y,a])/10^9,
+                  cl=c(rep(1,dim(res0)[1]),rep(2,dim(res1)[1]),rep(3,dim(res2)[1])))
+  df$cl = as.factor(df$cl)
+  l[[a]] = ggplot(df,aes(x=y,color=cl,fill=cl)) +
+    geom_density(alpha=0.5,show.legend=TRUE) +
+    ggtitle(paste0("Age=",a+Amin-1)) + xlab('') + ylab('')
+
+}
+grid.arrange(l[[1]],l[[2]],l[[3]],l[[4]],
+             l[[5]],l[[6]],l[[7]],l[[8]],
+             l[[9]],l[[10]],ncol=5,nrow=2)
+
+
+pars="alpha0"
+plot(simfitcomb0.year,pars=pars)
+
+
+
+
+## Make density plots
+for(y in 1:3)
+{
+  pdf(paste0("Density_year",2020+y,".pdf"),height=5,width=10)
+  y=1
+  l = list()
+  for(a in 1:A)
+  {
+    df = data.frame(y=c(res0[,y,a],res1[,y,a],res2[,y,a]),
+                    cl=c(rep(1,dim(res0)[1]),rep(2,dim(res1)[1]),
+                         rep(3,dim(res2)[1])))
+    df$cl = as.factor(df$cl)
+    l[[a]] = ggplot(df,aes(x=y,color=cl,fill=cl)) +
+      geom_density(alpha=0.5,show.legend=FALSE)
+  }
+  grid.arrange(l[[1]],l[[2]],l[[3]],l[[4]],
+               l[[5]],l[[6]],l[[7]],l[[8]],
+               l[[9]],l[[10]],ncol=5,nrow=2)
+  dev.off()
+}
+
+
+```
+

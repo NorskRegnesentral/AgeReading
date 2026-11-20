@@ -1,0 +1,450 @@
+---
+title: "Produce results - sensitivity"
+output: pdf_document
+date: "2026-11-02"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Produce plots and results for sensitivity analysis
+
+### Libraries
+
+```{r}
+library(AgeReading)
+library(rstan)
+library(ggplot2)
+require(gridExtra)
+library(loo)
+library(bayesplot)
+library(ggh4x)
+source("../R/my_ggplot1.R")
+source("../R/compare_samp.R")
+```
+
+### Load data and results
+
+```{r}
+Amin=3;Amax=12
+A = Amax-Amin+1
+R = 14
+
+dir = "../../save_results/"
+load(paste0(dir,"fitcomb0.year500000.RData"))              #reader dependent age errors
+load(paste0(dir,"fitcomb0.year.sens100000.RData"))             #reader independent age errors
+
+#Harmonic mean for marginal likelihood
+foo0 = as.vector(extract(fitcomb0.year)$loglik)
+ML0 = max(foo0)-log(mean(exp(-foo0+max(foo0))))
+foo0sens = as.vector(extract(fitcomb0.year.sens)$loglik)
+ML0sens = max(foo0sens)-log(mean(exp(-foo0sens+max(foo0sens))))
+
+##Calculating number at age
+data(Herring_D_boot)
+data(HerringSurvey)
+
+```
+
+### Rename xi0 so ages become right
+
+```{r}
+library(stringr)
+ind = grep("xi0",names(fitcomb0.year.sens))
+foo = names(fitcomb0.year.sens)[ind]
+for(i in 10:1)
+{
+  foo = str_replace_all(foo,paste0(",",i,"]"),paste0(",",i+2,"]"))
+}
+names(fitcomb0.year.sens)[ind] = foo
+names(fitcomb0.year)[ind] = foo
+foo2 = list()
+foo3 = substring(foo,first=5,last=5)
+foo4 = substring(foo,first=7,last=8)
+foo4[1:15] = substring(foo4[1:15],first=1,last=1)
+for(i in 1:length(foo))
+  foo2[[i]] = substitute(expression(x[i,j]^0),list(i=foo3[i],j=foo4[i]))
+
+
+##Rename M1 so ages become right
+ind = grep("M1",names(fitcomb0.year.sens))
+ind2 = matrix(nrow=length(ind),ncol=3)
+i=0
+for(a in 1:A)
+  for(a2 in 1:A)
+    for(r in 1:R)
+    {
+      i = i+1
+      ind2[i,] = c(r,a+Amin-1,a2+Amin-1)
+    }
+names(fitcomb0.year.sens)[ind] = paste0("M1[",ind2[,1],",",ind2[,2],",",ind2[,3],"]")
+names(fitcomb0.year)[ind] = paste0("M1[",ind2[,1],",",ind2[,2],",",ind2[,3],"]")
+```
+
+
+### Compute numbers at age
+
+```{r}
+Bootmean = Herring_D_boot[Herring_D_boot$BootstrapID<2,]
+nunit = length(unique(Bootmean$unitstrat))
+#Only using mean of bootstrap samples
+for(i in 1:nunit)
+{
+  Bootmean$Abundance[Bootmean$unitstrat==i] = mean(Herring_D_boot$Abundance[Herring_D_boot$unitstrat==i])
+  Bootmean$Biomass[Bootmean$unitstrat==i] = mean(Herring_D_boot$Biomass[Herring_D_boot$unitstrat==i])
+}
+
+
+foo = rstan::extract(fitcomb0.year)$xi1
+res0 = Make_Numfish_sample(foo,Herring_D_boot,HerringSurvey$stratayearindex)
+
+foo = rstan::extract(fitcomb0.year.sens)$xi1
+res0sens = Make_Numfish_sample(foo,Herring_D_boot,HerringSurvey$stratayearindex)
+
+
+```
+
+### Make plots of numbers at age
+
+```{r}
+dummy_df <- data.frame(
+  Method = factor(1:2, levels = 1:2),
+  x = 1:2,
+  y = 1:2
+)
+cols <- scales::hue_pal()(2)
+legend_plot <- ggplot(dummy_df, aes(x = x, y = y, color = Method)) +
+  geom_point() +
+  scale_color_manual(
+    values = cols,
+    labels = c("Original hyp.","Modifided hyp.")
+  ) +
+  guides(
+    color = guide_legend(
+      title = NULL,
+      override.aes = list(shape=15,size = 6)
+    )
+  ) +
+  theme_void() +
+  theme(
+    legend.position = "right",
+    legend.text = element_text(size = 10),
+    legend.key.size = unit(0.8, "lines")
+  )
+
+legend_grob2 <- cowplot::get_legend(legend_plot)
+```
+
+
+```{r}
+M1 = extract(fitcomb0.year,pars="M1")$M1
+M1mean = apply(M1,c(2,3,4),mean)
+
+
+for(y in c(1,3))
+{
+mean0 = round(apply(res0[,y,],2,mean)/10^9,2)
+mean0sens = round(apply(res0sens[,y,],2,mean)/10^9,2)
+sd0 = round(apply(res0[,y,],2,sd)/10^9,2)
+sd0sens = round(apply(res0sens[,y,],2,sd)/10^9,2)
+l = list()
+ind = 0
+#y = 2
+for(a in 1:10)
+{
+  ind = ind+1
+  df = data.frame(y=c(res0[,y,a],res0sens[,y,a]),
+                  Method=c(rep(1,dim(res0)[1]),
+                       rep(2,dim(res0sens)[1])))
+  df$y = df$y/10^9
+  df$Method = as.factor(df$Method)
+  l[[ind]] = ggplot(df,aes(x=y,color=Method,fill=Method)) +
+      geom_density(alpha=0.5) +
+      ggtitle(paste0("Age=",a+Amin-1)) + xlab('') + ylab('') +
+      scale_color_discrete(
+        labels = c(
+          paste0(mean0[a],"(",sd0[a],")"),
+          paste0(mean0sens[a],"(",sd0sens[a],")"))) +
+      scale_fill_discrete(
+        labels = c(
+          paste0(mean0[a],"(",sd0[a],")"),
+          paste0(mean0sens[a],"(",sd0sens[a],")"))) +
+      guides(
+        color = guide_legend(title = NULL),
+        fill  = guide_legend(title = NULL)
+      ) +
+      theme(legend.position = c(1,1),legend.justification = c(1, 1),
+            legend.text=element_text(size=8),
+            legend.key.size = unit(0.4, "lines"),
+            legend.title = element_blank())
+    
+  #l[[ind]] = my_ggplot2(df,a,mean0,mean0sens,sd0,sd0sens,Amin)
+
+}
+l[[11]] = legend_grob2
+pdf(paste0("Nest_sens_202",y,".pdf"),height=5,width=10)
+grid.arrange(grobs=l,layout_matrix=matrix(c(1:8,NA,9:11),nrow=3,byrow=T))
+#grid.arrange(l[[1]],l[[2]],l[[3]],ncol=3,nrow=1)
+dev.off()
+}
+```
+
+
+### Make plots of xi0
+
+```{r}
+ages <- 3:12
+for(y in 1:3)
+{
+  
+  pars = paste0("xi0[",y,",",2+1:A,"]")
+  xx =as.matrix(fitcomb0.year,pars=pars)
+  xx2 = as.matrix(fitcomb0.year.sens,pars=pars)
+  xxcomb = matrix(NA,nrow=nrow(xx),ncol=2*ncol(xx))
+  colnames(xxcomb) = 1:(2*ncol(xx))
+  for(j in 1:ncol(xx))
+  {
+    print(j)
+    xxcomb[,2*j-1] = xx[,j]
+    xxcomb[,2*j] = xx2[,j]
+    colnames(xxcomb)[c(2*j-1,2*j)] = c(paste0("A-",j+2),paste0("B-",j+2))
+  }
+  xxcomb = xxcomb[,20:1]
+  ## Names in A/B pairs for each age
+  colnames(xxcomb) <- paste(
+  rep(ages, each = 2),
+  rep(c("A", "B"), times = length(ages)),
+  sep = "::"
+)
+p = mcmc_intervals(xxcomb, prob = 0.8, prob_outer = 0.95) +
+  labs(y = "Age", x = "Proportion") +
+  scale_y_discrete(
+    guide = guide_axis_nested(delim = "::")
+  ) +
+  theme(
+    axis.text.x = element_text(size = 14),
+    axis.text.y = element_text(size = 14),
+    axis.title.x = element_text(size = 22),
+    axis.title.y = element_text(size = 22)
+  ) +
+  coord_flip()
+  pdf(paste0("fit0_xi0_sens_202",y,".pdf"),height=4,width=4)
+  print(p)
+dev.off()
+}
+```
+
+
+
+```{r}
+comb = cbind(c(7,7,11,11),c(7,8,11,10))
+
+for(k in 1:nrow(comb))
+{
+ind = 1:R
+pars = paste0("M1[",ind,",",comb[k,1],",",comb[k,2],"]")
+xx =as.matrix(fitcomb0.year,pars=pars)
+xx2 = as.matrix(fitcomb0.year.sens,pars=pars)
+xxcomb = matrix(NA,nrow=nrow(xx),ncol=2*ncol(xx))
+colnames(xxcomb) = 1:(2*ncol(xx))
+for(j in 1:ncol(xx))
+{
+  print(j)
+  xxcomb[,2*j-1] = xx[,j]
+  xxcomb[,2*j] = xx2[,j]
+  colnames(xxcomb)[c(2*j-1,2*j)] = c(paste0("A-",j),paste0("B-",j))
+}
+xxcomb = xxcomb[,28:1]
+p = mcmc_intervals(xxcomb,prob=0.8,prob_outer=0.95)+labs(y="Reader",x="Proportion")+
+  theme(axis.text.x = element_text(size = 14),axis.text.y = element_text(size = 14),
+        axis.title.x=element_text(size=22),axis.title.y=element_text(size=22)) +
+  geom_hline(yintercept = 12.5, linetype = "dashed", colour = "red") 
+pdf(paste0("fit0_M1_sens_",comb[k,1],"_",comb[k,2],".pdf"),height=4.5,width=4)
+print(p)
+dev.off()
+}
+```
+
+```{r}
+ind = 1:R
+combind = cbind(c(5,7,11,5,7,11),c(5,7,11,6,8,10))
+for(k in 1:nrow(combind))
+{
+ pars = paste0("M1[",ind,",",combind[k,1],",",combind[k,2],"]")
+xx =as.matrix(fitcomb0.year,pars=pars)
+xx2 = as.matrix(fitcomb0.year.sens,pars=pars)
+xxcomb = matrix(NA,nrow=nrow(xx),ncol=2*ncol(xx))
+colnames(xxcomb) = 1:(2*ncol(xx))
+for(j in 1:ncol(xx))
+{
+  print(j)
+  xxcomb[,2*j-1] = xx[,j]
+  xxcomb[,2*j] = xx2[,j]
+  colnames(xxcomb)[c(2*j-1,2*j)] = c(paste0("A-",j),paste0("B-",j))
+}
+xxcomb = xxcomb[,28:1]
+p = mcmc_intervals(xxcomb,prob=0.8,prob_outer=0.95)+labs(y="Reader",x="Proportion")+
+  theme(axis.text.x = element_text(size = 14),axis.text.y = element_text(size = 14),
+        axis.title.x=element_text(size=22),axis.title.y=element_text(size=22)) +
+  geom_hline(yintercept = 12.5, linetype = "dashed", colour = "red")  +
+  geom_hline(yintercept = 12.5, linetype = "dashed", colour = "red") 
+pdf(paste0("fit0_M1_sens_",combind[k,1],combind[k,2],".pdf"),height=4.5,width=4)
+print(p)
+dev.off()
+ 
+}
+```
+
+
+```{r}
+
+
+
+pars = paste0("M1[",ind,",7,7]")
+xx =as.matrix(fitcomb0.year,pars=pars)
+xx2 = as.matrix(fitcomb0.year.sens,pars=pars)
+xxcomb = matrix(NA,nrow=nrow(xx),ncol=2*ncol(xx))
+colnames(xxcomb) = 1:(2*ncol(xx))
+for(j in 1:ncol(xx))
+{
+  print(j)
+  xxcomb[,2*j-1] = xx[,j]
+  xxcomb[,2*j] = xx2[,j]
+  colnames(xxcomb)[c(2*j-1,2*j)] = c(paste0("A-",j),paste0("B-",j))
+}
+xxcomb = xxcomb[,28:1]
+p = mcmc_intervals(xxcomb,prob=0.8,prob_outer=0.95)+labs(y="Reader",x="Proportion")+
+  theme(axis.text.x = element_text(size = 14),axis.text.y = element_text(size = 14),
+        axis.title.x=element_text(size=22),axis.title.y=element_text(size=22)) +
+  geom_hline(yintercept = 12.5, linetype = "dashed", colour = "red")  +
+  geom_hline(yintercept = 12.5, linetype = "dashed", colour = "red") 
+pdf("fit0_M1_sens_77.pdf",height=4.5,width=4)
+print(p)
+dev.off()
+
+
+
+pdf("fit0_M1_sens_78.pdf",height=4.5,width=4)
+ind = 1:R
+pars = paste0("M1[",ind,",7,8]")
+xx =as.matrix(fitcomb0.year,pars=pars)
+xx2 = as.matrix(fitcomb0.year.sens,pars=pars)
+xxcomb = matrix(NA,nrow=nrow(xx),ncol=2*ncol(xx))
+colnames(xxcomb) = 1:(2*ncol(xx))
+for(j in 1:ncol(xx))
+{
+  print(j)
+  xxcomb[,2*j-1] = xx[,j]
+  xxcomb[,2*j] = xx2[,j]
+  colnames(xxcomb)[c(2*j-1,2*j)] = c(paste0("A-",j),paste0("B-",j))
+}
+xxcomb = xxcomb[,20:1]
+mcmc_intervals(xxcomb,prob=0.8,prob_outer=0.95)+labs(y="Reader",x="Proportion")+
+  theme(axis.text.x = element_text(size = 14),axis.text.y = element_text(size = 14),
+        axis.title.x=element_text(size=22),axis.title.y=element_text(size=22)) +
+  geom_hline(yintercept = 12.5, linetype = "dashed", colour = "red") 
+dev.off()
+
+pdf("fit0_M1_sens_76.pdf",height=4.5,width=4)
+ind = 1:R
+pars = paste0("M1[",ind,",7,6]")
+xx =as.matrix(fitcomb0.year,pars=pars)
+xx2 = as.matrix(fitcomb0.year.sens,pars=pars)
+xxcomb = matrix(NA,nrow=nrow(xx),ncol=2*ncol(xx))
+colnames(xxcomb) = 1:(2*ncol(xx))
+for(j in 1:ncol(xx))
+{
+  print(j)
+  xxcomb[,2*j-1] = xx[,j]
+  xxcomb[,2*j] = xx2[,j]
+  colnames(xxcomb)[c(2*j-1,2*j)] = c(paste0("A-",j),paste0("B-",j))
+}
+xxcomb = xxcomb[,20:1]
+mcmc_intervals(xxcomb,prob=0.8,prob_outer=0.95)+labs(y="Reader",x="Proportion")+
+  theme(axis.text.x = element_text(size = 14),axis.text.y = element_text(size = 14),
+        axis.title.x=element_text(size=22),axis.title.y=element_text(size=22)) +
+  geom_hline(yintercept = 12.5, linetype = "dashed", colour = "red") 
+dev.off()
+
+```
+
+### MCMC intervals for error matrix parameters
+
+```{r}
+pdf("fit0_sens_alpha0.pdf",height=6,width=5)
+pars="alpha0"
+xx =as.matrix(fitcomb0.year.sens,pars=pars)
+mcmc_intervals(xx,prob=0.8,prob_outer=0.95)+scale_y_discrete(labels=paste0("alpha[",1:14,",0]"))+
+  labs(y="",x="Proportion")+
+  theme(axis.text.x = element_text(size = 14),axis.text.y = element_text(size = 14),
+        axis.title.x=element_text(size=22),axis.title.y=element_text(size=22)) +
+  geom_hline(yintercept = 6.5, linetype = "dashed", colour = "red") 
+#plot(fitcomb0.year.sens,pars=pars)
+dev.off()
+
+pdf("fit0_sens_beta0.pdf",height=6,width=5)
+pars="beta0"
+xx =as.matrix(fitcomb0.year.sens,pars=pars)
+mcmc_intervals(xx,prob=0.8,prob_outer=0.95)+scale_y_discrete(labels=paste0("beta[",1:14,",0]"))+
+  labs(y="",x="Proportion")+
+  theme(axis.text.x = element_text(size = 14),axis.text.y = element_text(size = 14),
+        axis.title.x=element_text(size=22),axis.title.y=element_text(size=22))+
+  geom_hline(yintercept = 6.5, linetype = "dashed", colour = "red") 
+#plot(fitcomb0.year.sens,pars=pars)
+dev.off()
+
+pdf("fit0_sens_alpha1.pdf",height=6,width=5)
+pars="alpha1"
+xx =as.matrix(fitcomb0.year.sens,pars=pars)
+mcmc_intervals(xx,prob=0.8,prob_outer=0.95)+scale_y_discrete(labels=paste0("alpha[",1:14,",1]"))+
+  labs(y="",x="Proportion")+
+  theme(axis.text.x = element_text(size = 14),axis.text.y = element_text(size = 14),
+        axis.title.x=element_text(size=22),axis.title.y=element_text(size=22))+
+  geom_hline(yintercept = 6.5, linetype = "dashed", colour = "red") 
+#plot(fitcomb0.year.sens,pars=pars)
+dev.off()
+
+pdf("fit0_sens_beta1.pdf",height=6,width=5)
+pars="beta1"
+xx =as.matrix(fitcomb0.year.sens,pars=pars)
+mcmc_intervals(xx,prob=0.8,prob_outer=0.95)+scale_y_discrete(labels=paste0("beta[",1:14,",1]"))+
+  labs(y="",x="Proportion")+
+  theme(axis.text.x = element_text(size = 14),axis.text.y = element_text(size = 14),
+        axis.title.x=element_text(size=22),axis.title.y=element_text(size=22))+
+  geom_hline(yintercept = 6.5, linetype = "dashed", colour = "red") 
+#plot(fitcomb0.year.sens,pars=pars)
+dev.off()
+
+pdf("fit0_sens_trphi.pdf",height=6,width=5)
+pars="trphi"
+xx =as.matrix(fitcomb0.year.sens,pars=pars)
+mcmc_intervals(xx,prob=0.8,prob_outer=0.95)+scale_y_discrete(labels=paste("trphi[",1:14,"]"))+
+  labs(y="",x="Proportion")+
+  theme(axis.text.x = element_text(size = 14),axis.text.y = element_text(size = 14),
+        axis.title.x=element_text(size=22),axis.title.y=element_text(size=22)) +
+  geom_hline(yintercept = 6.5, linetype = "dashed", colour = "red") 
+#plot(fitcomb0.year.sens,pars=pars)
+dev.off()
+```
+
+### Compare parameters
+
+```{r}
+parv = c("alpha0","beta0","alpha1","beta1","trphi")
+foo3 = NULL
+for(k in 1:length(parv))
+{
+pars=parv[k]
+xx =as.matrix(fitcomb0.year,pars=pars)
+xx2 =as.matrix(fitcomb0.year.sens,pars=pars)
+xx3 = cbind(xx,xx2)
+foo = compare_samp(xx3)
+foo2 = NULL
+for(r in 1:14){foo2 = c(foo2,foo[r,r+14])}
+foo3 = c(foo3,foo2)
+print(min(foo2))
+}
+
+```
+

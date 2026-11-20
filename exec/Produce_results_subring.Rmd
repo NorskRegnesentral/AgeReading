@@ -1,0 +1,337 @@
+---
+title: "Produce_results_subring"
+output: pdf_document
+date: "2026-10-29"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Produce plots based on subset of ring data analysis
+
+### Libraries
+
+```{r}
+library(AgeReading)
+library(rstan)
+library(ggplot2)
+require(gridExtra)
+library(loo)
+library(bayesplot)
+library(cowplot)
+```
+
+### Load data and results
+
+```{r}
+Amin=3;Amax=12
+A = Amax-Amin+1
+R = 14
+
+dir = "../../save_results/"
+load(paste0(dir,"fitcomb0.year500000.RData"))                     
+load(paste0(dir,"fitcombsubring0.year200000.RData"))              
+load(paste0(dir,"fitcomb0subring4.year200000.RData"))             
+load(paste0(dir,"fitcomb0subring8.year200000.RData"))   
+load(paste0(dir,"fitcomb0subread2.year200000.RData"))   
+
+data(Herring_D_boot)
+data(HerringSurvey)
+```
+
+### Calculating number at age
+
+```{r}
+Bootmean = Herring_D_boot[Herring_D_boot$BootstrapID<2,]
+nunit = length(unique(Bootmean$unitstrat))
+#Only using mean of bootstrap samples
+for(i in 1:nunit)
+{
+  Bootmean$Abundance[Bootmean$unitstrat==i] = mean(Herring_D_boot$Abundance[Herring_D_boot$unitstrat==i])
+  Bootmean$Biomass[Bootmean$unitstrat==i] = mean(Herring_D_boot$Biomass[Herring_D_boot$unitstrat==i])
+}
+
+#foo = rstan::extract(fitcomb0.year)$xi1
+#res0 = Make_Numfish_sample(foo,Herring_D_boot,HerringSurvey$stratayearindex)
+load(paste0(dir,"res0fit0.RData"))
+
+foo = rstan::extract(fitcomb0subring.year)$xi1
+res1 = Make_Numfish_sample(foo,Herring_D_boot,HerringSurvey$stratayearindex)
+
+foo = rstan::extract(fitcomb0subring4.year)$xi1
+res2 = Make_Numfish_sample(foo,Herring_D_boot,HerringSurvey$stratayearindex)
+
+foo = rstan::extract(fitcomb0subring8.year)$xi1
+res3 = Make_Numfish_sample(foo,Herring_D_boot,HerringSurvey$stratayearindex)
+
+foo = rstan::extract(fitcomb0subread2.year)$xi1
+res4 = Make_Numfish_sample(foo,Herring_D_boot,HerringSurvey$stratayearindex)
+```
+
+### Make plots
+
+### Dummy for legend
+
+```{r}
+dummy_df <- data.frame(
+  Method = factor(1:3, levels = 1:3),
+  x = 1:3,
+  y = 1:3
+)
+#cols <- c("steelblue", "firebrick", "darkgreen")
+cols <- scales::hue_pal()(3)
+legend_plot <- ggplot(dummy_df, aes(x = x, y = y, color = Method)) +
+  geom_point() +
+  scale_color_manual(
+    values = cols,
+    labels = c("Full data","1/4 of exercise data","1/8 of exercise data")
+  ) +
+  guides(
+    color = guide_legend(
+      title = NULL,
+      override.aes = list(shape=15,size = 6)
+    )
+  ) +
+  theme_void() +
+  theme(
+    legend.position = "right",
+    legend.text = element_text(size = 10),
+    legend.key.size = unit(0.8, "lines")
+  )
+
+legend_grob <- cowplot::get_legend(legend_plot)
+```
+
+
+```{r}
+y = 2
+mean0 = round(apply(res0[,y,],2,mean)/10^9,2)
+sd0 = round(apply(res0[,y,],2,sd)/10^9,2)
+mean1 = round(apply(res1[,y,],2,mean)/10^9,2)
+sd1 = round(apply(res1[,y,],2,sd)/10^9,2)
+mean2 = round(apply(res2[,y,],2,mean)/10^9,2)
+sd2 = round(apply(res2[,y,],2,sd)/10^9,2)
+mean3 = round(apply(res3[,y,],2,mean)/10^9,2)
+sd3 = round(apply(res3[,y,],2,sd)/10^9,2)
+
+l = list()
+ind = 0
+y = 2
+for(a in 3:5)
+{
+  ind = ind+1
+  df = data.frame(y=c(res0[,y,a],res2[,y,a],res3[,y,a]),
+                  Method=c(rep(1,dim(res0)[1]),
+                       rep(2,dim(res2)[1]),rep(3,dim(res3)[1])))
+  df$y = df$y/10^9
+  df$Method = as.factor(df$Method)
+  l[[ind]] = ggplot(df,aes(x=y,color=Method,fill=Method)) +
+    geom_density(alpha=0.5) +
+    ggtitle(paste0("Age=",a+Amin-1)) + xlab('') + ylab('') +
+    scale_color_discrete(
+      labels = c(
+        paste0(mean0[a],"(",sd0[a],")"),
+        paste0(mean2[a],"(",sd2[a],")"),
+        paste0(mean3[a],"(",sd3[a],")"))) +
+    scale_fill_discrete(
+      labels = c(
+        paste0(mean0[a],"(",sd0[a],")"),
+        paste0(mean2[a],"(",sd2[a],")"),
+        paste0(mean3[a],"(",sd3[a],")"))) +
+    guides(
+      color = guide_legend(title = NULL),
+      fill  = guide_legend(title = NULL)
+    ) +
+    theme(legend.position = c(1,1),legend.justification = c(1, 1),
+          legend.text=element_text(size=10),
+          legend.key.size = unit(0.6, "lines"),
+          legend.title = element_blank())
+}
+
+pdf("Nest_age345_subring_2022.pdf",height=2.5,width=10)
+grid.arrange(l[[1]],l[[2]],l[[3]],legend_grob,ncol=4,nrow=1)
+dev.off()
+
+```
+
+
+```{r}
+for(y in 1:2)
+{
+  l = list()
+  ind = 0
+  mean0 = round(apply(res0[,y,],2,mean)/10^9,2)
+  sd0 = round(apply(res0[,y,],2,sd)/10^9,2)
+  mean1 = round(apply(res1[,y,],2,mean)/10^9,2)
+  sd1 = round(apply(res1[,y,],2,sd)/10^9,2)
+  mean2 = round(apply(res2[,y,],2,mean)/10^9,2)
+  sd2 = round(apply(res2[,y,],2,sd)/10^9,2)
+  mean3 = round(apply(res3[,y,],2,mean)/10^9,2)
+  sd3 = round(apply(res3[,y,],2,sd)/10^9,2)
+  
+  for(a in 1:10)
+  {
+    ind = ind+1
+    df = data.frame(y=c(res0[,y,a],res2[,y,a],res3[,y,a]),
+                    Method=c(rep(1,dim(res0)[1]),
+                             rep(2,dim(res2)[1]),rep(3,dim(res3)[1])))
+    df$y = df$y/10^9
+    df$Method = as.factor(df$Method)
+    l[[ind]] = ggplot(df,aes(x=y,color=Method,fill=Method)) +
+      geom_density(alpha=0.5) +
+      ggtitle(paste0("Age=",a+Amin-1)) + xlab('') + ylab('') +
+      scale_color_discrete(
+        labels = c(
+          paste0(mean0[a],"(",sd0[a],")"),
+          paste0(mean2[a],"(",sd2[a],")"),
+          paste0(mean3[a],"(",sd3[a],")"))) +
+      scale_fill_discrete(
+        labels = c(
+          paste0(mean0[a],"(",sd0[a],")"),
+          paste0(mean2[a],"(",sd2[a],")"),
+          paste0(mean3[a],"(",sd3[a],")"))) +
+      guides(
+        color = guide_legend(title = NULL),
+        fill  = guide_legend(title = NULL)
+      ) +
+      theme(legend.position = c(1,1),legend.justification = c(1, 1),
+            legend.text=element_text(size=10),
+            legend.key.size = unit(0.6, "lines"),
+            legend.title = element_blank())
+  }
+  l[[11]] = legend_grob
+  
+  pdf(paste0("Nest_subring_202",y,".pdf"),height=5,width=10)
+  grid.arrange(grobs=l,layout_matrix(c(1:8,NA,9:11),nrow=3,byrow=T))
+  dev.off()
+}
+```
+
+
+### Plot for subset of readers
+
+```{r}
+dummy_df <- data.frame(
+  Method = factor(1:2, levels = 1:2),
+  x = 1:2,
+  y = 1:2
+)
+#cols <- c("steelblue", "firebrick", "darkgreen")
+cols <- scales::hue_pal()(3)
+legend_plot <- ggplot(dummy_df, aes(x = x, y = y, color = Method)) +
+  geom_point() +
+  scale_color_manual(
+    values = cols,
+    labels = c("Full data","3 readers")
+  ) +
+  guides(
+    color = guide_legend(
+      title = NULL,
+      override.aes = list(shape=15,size = 6)
+    )
+  ) +
+  theme_void() +
+  theme(
+    legend.position = "right",
+    legend.text = element_text(size = 10),
+    legend.key.size = unit(0.8, "lines")
+  )
+
+legend_grob2 <- cowplot::get_legend(legend_plot)
+```
+
+
+```{r}
+for(y in 2)
+{
+  l = list()
+  ind = 0
+  mean0 = round(apply(res0[,y,],2,mean)/10^9,2)
+  sd0 = round(apply(res0[,y,],2,sd)/10^9,2)
+  mean4 = round(apply(res4[,y,],2,mean)/10^9,2)
+  sd4 = round(apply(res4[,y,],2,sd)/10^9,2)
+  
+  for(a in 3:5)
+  {
+    ind = ind+1
+    df = data.frame(y=c(res0[,y,a],res4[,y,a]),
+                    Method=c(rep(1,dim(res0)[1]),
+                             rep(4,dim(res4)[1])))
+    df$y = df$y/10^9
+    df$Method = as.factor(df$Method)
+    l[[ind]] = ggplot(df,aes(x=y,color=Method,fill=Method)) +
+      geom_density(alpha=0.5) +
+      ggtitle(paste0("Age=",a+Amin-1)) + xlab('') + ylab('') +
+      scale_color_discrete(
+        labels = c(
+          paste0(mean0[a],"(",sd0[a],")"),
+          paste0(mean4[a],"(",sd4[a],")"))) +
+      scale_fill_discrete(
+        labels = c(
+          paste0(mean0[a],"(",sd0[a],")"),
+          paste0(mean4[a],"(",sd4[a],")"))) +
+      guides(
+        color = guide_legend(title = NULL),
+        fill  = guide_legend(title = NULL)
+      ) +
+      theme(legend.position = c(1,1),legend.justification = c(1, 1),
+            legend.text=element_text(size=10),
+            legend.key.size = unit(0.6, "lines"),
+            legend.title = element_blank())
+  }
+  l[[4]] = legend_grob2
+  
+  pdf(paste0("Nest_age345_subread_202",y,".pdf"),height=2.5,width=10)
+  grid.arrange(grobs=l,layout_matrix=matrix(c(1:4),nrow=1,ncol=4,byrow=T))
+  dev.off()
+}
+```
+
+
+```{r}
+for(y in 1:3)
+{
+  l = list()
+  ind = 0
+  mean0 = round(apply(res0[,y,],2,mean)/10^9,2)
+  sd0 = round(apply(res0[,y,],2,sd)/10^9,2)
+  mean4 = round(apply(res4[,y,],2,mean)/10^9,2)
+  sd4 = round(apply(res4[,y,],2,sd)/10^9,2)
+  
+  for(a in 1:10)
+  {
+    ind = ind+1
+    df = data.frame(y=c(res0[,y,a],res4[,y,a]),
+                    Method=c(rep(1,dim(res0)[1]),
+                             rep(4,dim(res3)[1])))
+    df$y = df$y/10^9
+    df$Method = as.factor(df$Method)
+    l[[ind]] = ggplot(df,aes(x=y,color=Method,fill=Method)) +
+      geom_density(alpha=0.5) +
+      ggtitle(paste0("Age=",a+Amin-1)) + xlab('') + ylab('') +
+      scale_color_discrete(
+        labels = c(
+          paste0(mean0[a],"(",sd0[a],")"),
+          paste0(mean4[a],"(",sd4[a],")"))) +
+      scale_fill_discrete(
+        labels = c(
+          paste0(mean0[a],"(",sd0[a],")"),
+          paste0(mean4[a],"(",sd4[a],")"))) +
+      guides(
+        color = guide_legend(title = NULL),
+        fill  = guide_legend(title = NULL)
+      ) +
+      theme(legend.position = c(1,1),legend.justification = c(1, 1),
+            legend.text=element_text(size=10),
+            legend.key.size = unit(0.6, "lines"),
+            legend.title = element_blank())
+  }
+  l[[4]] = legend_grob2
+  
+  pdf(paste0("Nest_age_subread_202",y,".pdf"),height=5,width=10)
+  grid.arrange(grobs=l,layout_matrix(c(1:8,NA,9:11),nrow=3,byrow=T))
+  dev.off()
+}
+```
+
