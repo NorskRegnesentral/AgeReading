@@ -14,6 +14,9 @@ n = nrow(data_s)
 data_s$Modal2 = NA
 data_s$Modal3 = NA
 set.seed(123)
+Amin = 3
+Amax = 12
+
 for(i in 1:n)
 {
   ind = grep(data_s$`Fish ID`[i],modaleAge$FishID)
@@ -38,10 +41,8 @@ data_slong$ReaderN = match(data_slong$reader,Reader)
 Ring.full = data_slong[,c("fishID","age","ReaderN")]
 Ring.full = Ring.full[!is.na(Ring.full$age),]
 Ring.full$age = pmin(pmax(Ring.full$age,Amin),Amax)-Amin+1
-usethis::use_data(Ring.full,overwrite=TRUE)
+#usethis::use_data(Ring.full,overwrite=TRUE)
 
-Amin = 3
-Amax = 12
 age = pmin(pmax(data_slong$age,Amin),Amax)-Amin+1
 agetrue = pmin(pmax(data_slong$`Modal age (exp)`,Amin),Amax)-Amin+1
 agetrue = pmin(pmax(data_slong$Modal2,Amin),Amax)-Amin+1
@@ -52,4 +53,4 @@ A = Amax-Amin+1
 readErr = table(data_slong$reader,agetrue,age)
 readErr = readErr[1:6,,]
 Ring.readErr = readErr
-usethis::use_data(Ring.readErr,overwrite=TRUE)
+#usethis::use_data(Ring.readErr,overwrite=TRUE)
