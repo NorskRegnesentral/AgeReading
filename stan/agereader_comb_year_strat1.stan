@@ -17,6 +17,7 @@ data {
   int<lower=1,upper=S>  unitstationindex[U];
   int<lower=1,upper=R2> unitreaderindex[U];
   vector<lower=0>[A] alpharep;
+  real deltapar;
 }
 
 
@@ -67,7 +68,7 @@ model {
   target += normal_lpdf(Pbeta1|0,3);
   target += normal_lpdf(Ptrphi|0,3);
 
-  target += uniform_lpdf(delta |0.0,20.0);
+  target += uniform_lpdf(delta |0.0,deltapar);
   for(y in 1:Y){
     target += dirichlet_lpdf(xi0[y]|alpharep);
   }
